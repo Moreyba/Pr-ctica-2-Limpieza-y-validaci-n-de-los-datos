@@ -1,0 +1,328 @@
+---
+title: 'PRACTICA 2: LIMPIEZA Y VALIDACIÓN DE LOS DATOS'
+authors: "Mario Ubierna San Mamés y Moreyba García Cedrés"
+date: '`r format(Sys.Date(),"%e de %B %Y")`'
+output: 
+  pdf_document: 
+    latex_engine: xelatex
+  html_document:
+    toc: yes
+    number_sections: yes
+    toc_depth: 2
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_libraries, include=FALSE}
+library(knitr)
+library(lubridate)
+library(VIM)
+library(stringr)
+library(psych)
+library(readr)
+library(pROC)
+library(dplyr)
+```
+
+
+****
+# 1. Descripción del dataset. 
+****
+
+El dataset que hemos selecionado contiene datos de los 100 juegos de Google Play Store mejor valorados. Las variables que recoge el dataset son:
+
+- Rank: Calsificación de una categoría particular.
+- Title: Nombre del juego.
+- Total ranting: Número total de calificaciones.
+- Installs: Número de intalaciones aproximado.
+- Average rating: Promedio de estrellas.
+- growth (30 days): Porcentaje de crecimiento en 30 días.
+- growth (60 days): Porcentaje de crecimiento en 60 días.
+- price: Precio en Dolares.
+- category: Cantegoria del juego. 
+- X5.star.ratings: Número de calificaciones de 5 estrellas.
+- X4.star.ratings: Número de calificaciones de 4 estrellas.
+- X3.star.ratings: Número de calificaciones de 3 estrellas.
+- X2.star.ratings: Número de calificaciones de 2 estrellas.
+- X1.star.ratings: Número de calificaciones de 1 estrellas.
+- paid: Toma valor verdadero si se pago y falso si no se hizo.
+
+### ¿Por qué es importante y qué pregunta/problema pretende responder?
+
+****
+# 2. Integración y selección de los datos de interés a analizar.
+****
+
+## 2.1. Integración de los datos.
+
+En primer lugar, frealizamos la carga del fichero que contiene los datos para nuestro análisis en formato csv, el cual está delimitado por comas y los decismales "·". Obtenemos como resultado de la llamada a la función read.csv() será un objeto data.frame.
+ 
+```{r, echo=TRUE}
+# read data
+games <- read.csv("/Users/moreybagarciacedres/Downloads/android-games.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+n.var <- names(games)
+
+#View(games)
+```
+
+Mostramos las primeras lineas del dataset, así como su encabezado.
+
+```{r, echo=TRUE}
+head(games)
+```
+
+
+Una vez cargados los datos comprobamos que nuestro fichero contiene `r nrow(games)` registros y `r ncol(games)` variables.
+
+Las variables son de tipo `r toString(n.var)`.
+
+
+Como podemos en el resumen de los estadisticos descriptivos de las distintas variables no hay ningún campo no informado.
+
+```{r, echo=TRUE}
+summary(games)
+```
+### 2.2. Tipo variables.
+
+Comprobamos de que tipo es cada variable.
+
+```{r, echo=TRUE}
+#read data
+res <- sapply(games,  class)
+kable(data.frame(variables=names(res),clase=as.vector(res)))
+
+```
+
+A continuación analizamos en mayor profundidad los distintos valores que toman las variables categóricas.
+
+```{r, echo=TRUE}
+title <-unique(games$title)
+head(title)
+unique(games$category)
+unique(games$installs)
+unique(games$paid)
+```
+
+Observamos que la variable title toma un valor distinto para cada registro. Más adelante trataresmos el resto de variables que sean necesarias para nuestro análisis.
+
+## 2.3. Selección de variables.
+
+Para nuestro análisis vamos a eliminar del dataset los campos calculados, en nuetro caso son la media de estrellas que es la variable **average.rating, paid y total.ratings**. Por otro lado, para nuestro analisis es suficiente con uno de los porcentajes de crecimiento por tanto eliminamos tambien la variable **growth..60.days**.
+
+```{r, echo=TRUE}
+games <-games[,c(-3,-5,-7,-15)] # Elimienamos las variables en cuestión.
+
+head(games)
+```
+Como resusltado obtenemos un dataset que contiene `r nrow(games)` registros y `r ncol(games)` variables.
+
+Las variables son de tipo `r toString(n.var)`.
+
+****
+# 3. Limpieza de los datos.
+****
+
+Con el archivo de datos obtenido del proceso anterior, vemos la necesidad, para  seguir con nuestro análisis, de factorizar la variable **Category** y reconvertir a numérica la variable **Installs**.
+
+A continuación, damos un valor numérico del 1 al 17 a los valores que toma la variable **Category**.
+
+```{r, echo=TRUE}
+levels <- c(unique(games$category))
+games$category_num <- match(games$category, levels)
+games$category_factor = factor(games$category, levels = levels)
+games$category_num2 <- as.integer(games$category_factor)
+
+head(games)
+```
+
+
+En el caso de la variable **Install** hemos supuesto que M Megabytes y que k son kilobytes, por lo que hemos multiplicado la M por 10^6 para pasalo a bytes y k por 10^3.
+
+```{r, echo=TRUE}
+converter<-function(valueToConvert) {
+   intValue <- 0
+   intValue <- strtoi(substr(valueToConvert, 1, regexpr('\\.', valueToConvert)-1))
+    if (grepl("M", valueToConvert, ignore.case = TRUE)) {
+        intValue <- intValue * (10**6)
+    }
+    if (grepl("K", valueToConvert, ignore.case = TRUE)) {
+       intValue <- intValue * (10**3)
+    }
+   intValue
+}
+
+games$int_installs <- sapply(games$installs, FUN=converter)
+
+head(games)
+
+```
+
+
+
+
+```{r, echo=TRUE}
+games <-games[,c(-3,-6,-12,-13)] # Elimienamos las variables en variables que sobran
+```
+
+Finalmente, tras tratar las variables mal informadas nos queda nuestro dataset final sobre el que vamos a plicar la limpieza de datos y posteriormente el análisis.
+
+```{r, echo=TRUE}
+#read data
+res <- sapply(games,  class)
+kable(data.frame(variables=names(res),clase=as.vector(res)))
+
+```
+
+Como podemos ver solo nos hemos quedado con una varible categoricas **Title**y el resto las hemos reconvertido en númericas.
+
+##    3.1. ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno de estos casos?
+
+Como se puede comprobar en el resumen de los estadisticos descriptivos de las distintas variables, no hay ningún valor nulo.
+
+```{r, echo=TRUE}
+summary(games)
+```
+
+Con la función summary vemos si existen valores nulos y cual es el valor maximo y minimo que toma cada variable. La variable price toma valor cero pero es de interes para el análisis ya que significa que el usuario no ha pagando nada. Por otro lado, la variable growth..30.days. también toma valor 0 en el caso de no haber crecimiento.
+
+
+##    3.2. Identificación y tratamiento de valores extremos.
+
+Los valores extremos o outliers son aquellos que parecen no ser congruentes sin los comparamos con el resto de los datos. Para identificarlos, podemos hacer uso de dos vías: (1) representar un diagrama de caja por cada variable y ver qué valores distan mucho del rango intercuartílico (la caja) o (2) utilizar la función boxplots.stats() de R, la cual se emplea a continuación. Así, se mostrarán sólo los valores atípicos para aquellas variables que los contienen:
+
+```{r, echo=TRUE}
+boxplot.stats(games$rank)$out
+
+```
+
+```{r, echo=TRUE}
+boxplot.stats(games$int_installs)$out
+```
+
+
+```{r, echo=TRUE}
+out_growth <- boxplot.stats(games$growth..30.days.)$out
+head(out_growth)
+```
+
+
+```{r, echo=TRUE}
+boxplot.stats(games$price)$out
+
+```
+
+
+```{r, echo=TRUE}
+out_X5 <- boxplot.stats(games$X5.star.ratings)$out
+head(out_X5)
+```
+
+```{r, echo=TRUE}
+out_X4 <- boxplot.stats(games$X4.star.ratings)$out
+head(out_X4)
+```
+
+
+```{r, echo=TRUE}
+out_X3 <- boxplot.stats(games$X3.star.ratings)$out
+head(out_X3)
+```
+
+
+```{r, echo=TRUE}
+out_X2 <- boxplot.stats(games$X2.star.ratings)$out
+head(out_X2)
+```
+
+
+```{r, echo=TRUE}
+out_X1 <- boxplot.stats(games$X1.star.ratings)$out
+head(out_X1)
+```
+
+Vemos una representación gráfica con boxplot de las variables númericas para comprobar si existen valores extremos.
+
+```{r boxplot,eval=TRUE,echo=TRUE}
+par(mfrow=c(3,2))
+for(i in 1:ncol(games)) {
+  if (is.numeric(games[,i])){
+    boxplot(games[,i], main = colnames(games)[i], width = 100)
+  }
+}
+par(mfrow=c(1,1))
+```
+
+
+Se considera valores extremos a aquellos valores cuando se encuentra alejado 3 desviaciones estándar con respecto a la media. Por ello, en muchos trabajos se utiliza la representación de los datos mediante gráficos de cajas (boxplots), con el objetivo de detectar dichos outliers.
+
+Gráficamente vemos que las variables con valores muy por encima de la medía son paid, que no se puede considerar outliers ya que la mayoría de lo juegos son gratuitos, también int_install está muy por encima de la media pero no parece ser incorrecto porque es posible que hayas juegos con más megas que otros.
+
+Las variables que si es posible que sean erroneos porque con fines mal intensionados se puede haber añadido excesivas valaraciones a un juego por medios automaticos (Rotos) de forma que se pueden haber valores extemos estas son:
+ - growth..30.days.
+ - X5.star.ratings    
+ - X4.star.ratings   
+ - X3.star.ratings
+ - X2.star.ratings   
+ - X1.star.ratings 
+ 
+ Es por ello, que hemos decidido elinminar estos valores.
+ 
+```{r, echo=TRUE}
+filas_old <-nrow(games)
+games <- games[-which(games$growth..30.days. %in% out_growth),]
+games <- games[-which(games$X5.star.ratings %in% out_X5),]
+games <- games[-which(games$X4.star.ratings %in% out_X4),]
+games <- games[-which(games$X3.star.ratings %in% out_X3),]
+games <- games[-which(games$X2.star.ratings %in% out_X2),]
+newgames <- games[-which(games$X1.star.ratings %in% out_X1),]
+filas_new <-nrow(newgames)
+```
+ 
+Una vez eliminados los outlier, comprobamos gráficamente como se distribuyen los datos de estas variables.
+ 
+```{r ,echo=TRUE}
+par(mfrow=c(3,2))
+for(i in 1:ncol(newgames)) {
+  if (is.numeric(newgames[,i])){
+    boxplot(newgames[,i], main = colnames(newgames)[i], width = 100)
+  }
+}
+par(mfrow=c(1,2))
+
+```
+
+Hemos pasado de `r filas_old` filas a `r filas_new` filas.
+ 
+
+
+Por último, exportamos el nuevo dataset a un nuevo csv.
+
+```{r, echo=TRUE}
+my.newfile <- "newgame.csv"
+write.csv(newgames, file=my.newfile, row.names = FALSE)
+
+```
+
+
+
+****
+# 4. Análisis de los datos.
+****
+## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
+## 4.2. Comprobación de la normalidad y homogeneidad de la varianza.
+## 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. 
+### En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
+
+****
+# 5. Representación de los resultados a partir de tablas y gráficas.
+****
+
+****
+# 6. Resolución del problema. 
+****
+### A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
+
+
