@@ -15,10 +15,10 @@ https://www.kaggle.com/dhruvildave/top-play-store-games?select=android-games.csv
 
 ## Ficheros del código fuente
 
-- ** code/**:
-- ** code/**:
-- ** data/**:
-- ** data/**:
+- **code/Práctica 2 Limpieza de datos.Rmd** : 
+- **code/Práctica 2 Limpieza de datos.pdf** : 
+- **data/android-games.csv** : Archivo original con los datos sobres los que hemos hecho el análisis.
+- **data/newgames.csv** : Archivo con los datos tras hacer la limpieza de datos.
 
 ## Recursos
 1. Calvo M, Subirats L, Pérez D (2019). Introducción a la limpieza y análisis de los datos. Editorial UOC.
