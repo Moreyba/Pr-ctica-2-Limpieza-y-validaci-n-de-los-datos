@@ -25,6 +25,7 @@ library(psych)
 library(readr)
 library(pROC)
 library(dplyr)
+library(nortest)
 ```
 
 
@@ -62,7 +63,7 @@ El tiempo avanzaba y parecía que esta industria seguía igual, sin embargo hubo
 
 Al tener mayor audiencia aumenta la oferta, por lo que analizar este dataset nos puede aportar mucha información, por ejemplo el saber qué tipo de juego va a tener más éxito, si se decide poner un precio al juego y de ser así cuál, qué categoría de juego tiene un mayor público...
 
-Como podemos observar este dataset nos puede proporcionar mucha información en varios aspectos, pero en nuestro caso vamos a analizar exclusivamente el rating, es decir, vamor a descubrir de qué depende que un juego tenga un rating mayor o en otras palabras, cuánto éxito puede tener. Para ello vamos a realizar si por ejemplo el número de instalaciones afecta al éxito, si el precio influye... 
+Como podemos observar este dataset nos puede proporcionar mucha información en varios aspectos, pero en nuestro caso vamos a analizar exclusivamente el rank, es decir, vamor a descubrir de qué depende que un juego tenga un ranking mayor o en otras palabras, cuánto éxito puede tener. Para ello además de analizar qué variables están correlacionadas, vamos a realizar un contraste de hipótesis para saber si el número de instalaciones afecta al ranking, y crearemos diferentes modelos para predecir el ranking que puede llegar a tener un juego dependiendo de sus características... 
 
 La respuesta a la pregunta que nos hemos planteado se resolverá a lo largo de la práctica, pero lo primero de todo es hacer la limpieza del dataset.
 
@@ -329,7 +330,9 @@ write.csv(newgames, file=my.newfile, row.names = FALSE)
 
 ## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
 
-Antes de comenzar con el análisis en sí, vamos a seleccionar diferentes grupos que pueden ser interesantes a la hora de analizar o comparar. Cabe destacar que no todos los grupos se van usar, pero pueden ser de utilidad para estudios posteriores, es decir, en el dataset original la variable rank viene determinada para cada categoría (si la categoría es "SPORTS" rank toma valores del 1 al 100 para los juegos de tipo sport, si la categoría es "STRATEGY" rank vuelve a tomar valores entre 1 y 100 para los juegos de dicha categoría). Como el objetivo nuestro es analizar el ranking, éste solo tiene sentido analizarlo para cada categoría de juego, es por ello que las agrupaciones las vamos a hacer por categoría:
+Antes de comenzar con el análisis en sí, vamos a seleccionar diferentes grupos que pueden ser interesantes a la hora de analizar o comparar. Cabe destacar que no todos los grupos se van usar, pero pueden ser de utilidad para estudios posteriores, es decir, en el dataset original la variable rank viene determinada para cada categoría (si la categoría es "SPORTS" rank toma valores del 1 al 100 para los juegos de tipo sport, si la categoría es "STRATEGY" rank vuelve a tomar valores entre 1 y 100 para los juegos de dicha categoría). Como el objetivo nuestro es analizar el ranking, éste solo tiene sentido analizarlo para cada categoría de juego, es por ello que las agrupaciones las vamos a hacer por categoría.
+
+Por otro lado, vamos a crear un par de grupos más que nos van a servir para solventar la pregunta que nos hacemos en el contraste de hipótesis, la cual la detallaremos más adelante:
 
 ```{r}
 # Juegos cuya categoría es GAME ACTION
@@ -382,10 +385,98 @@ newgames.trivia = newgames[newgames$category_num2 == 16,]
 
 # Juegos cuya categoría es GAME WORD
 newgames.word = newgames[newgames$category_num2 == 17,]
+
+# Juegos cuya categoría es GAME WORD y tiene un número de instalaciones bajas
+newgames.ins_low = newgames.word[newgames.word$int_installs < 10000000,]
+
+# Juegos cuya categoría es GAME WORD y tiene un número de instalaciones bajas
+newgames.ins_high = newgames.word[newgames.word$int_installs >= 10000000,]
+
+
 ```
 
 
 ## 4.2. Comprobación de la normalidad y homogeneidad de la varianza.
+
+Una vez que tenemos los grupos que queremos analizar/comparar vamos a comprobar la normalidad y homogeneidad de la varianza.
+
+Dado que el objetivo de esta práctica es demostrar el conocimiento adquirido y no hacer un estudio completo, vamos a realizar el análisis de los datos a partir de un grupo definido en el apartado anterior, en nuestro caso hemos elegido la categoría "GAME WORD", por lo que vamos a hacer uso del dataframe newgames.word. El estudio que vamos a realizar para esta categoría se podría hacer para todas las demás y así tener un análisis completo del mercado para cada categoría.
+
+Una vez hecha esta aclaración realizamos la comprobación de la normalidad, para ello hacemos uso de una librería externa y poder aplicar sobre las variables cuantitativas el test de Anderson-Darling.
+
+Paratimos de la base que la hipótesis nula es que la variable sigue una distribución normal, y la hipótesis alternativa que no sigue dicha distribución, por lo tanto vamos a comprobar para cada variable si el pvalor obtenido es menor que el nivel de significacia, es decir, si pvalor < alfa, de ser así podemos rechazar la hipótesis nula a favor de la aternativa.
+
+Definimos la función que nos realiza este cálculo:
+```{r}
+test_normalidad = function(df, alpha = 0.05) {
+  # Inicializamos
+  var_no_dist_normal = c()
+  var_dist_normal = c()
+  cols_eliminar = c()
+  col_names = colnames(df)
+  
+  # Comprobamos que las variables tengan más de un valor único, ya que de lo contrario no funciona ad.test
+  for (i in 1:ncol(df)) {
+     if (is.numeric(df[, i]) | is.integer(df[, i])) { 
+       if (length(unique(df[, i])) == 1) cols_eliminar[length(cols_eliminar) + 1] = col_names[i]
+     }
+  }
+  
+  # Eliminamos dichas variables
+  df = df[, !(names(df) %in% cols_eliminar)]
+  
+  # Añadimos dichas variables a la lista de variables que no siguen una distribución normal
+  for (i in 1:length(cols_eliminar)) {
+    var_no_dist_normal[i] = cols_eliminar[i]
+  }
+  
+  # Comprobamos para cada columna si sigue una distribución normal o no
+  col_names = colnames(df)
+  for (i in 1:ncol(df)) {
+    
+    if (is.numeric(df[, i]) | is.integer(df[, i])) {
+      pvalue = ad.test(df[, i])$p.value
+      
+      # No proviene de una distribución normal
+      if (pvalue < alpha) {
+        var_no_dist_normal[length(var_no_dist_normal) + 1] = col_names[i]
+      } else {
+        var_dist_normal[length(var_dist_normal) + 1] = col_names[i]
+      }
+    }
+    
+  }
+  
+  # Imprimimos por pantalla los resultado
+  cat("Variables que NO siguen una distribución normal: \n\n")
+  for (c in var_no_dist_normal) {
+    cat(c, "\n")
+  }
+  cat("\n------------------------------\n\n")
+  cat("Variables que SÍ siguen una distribución normal: \n\n")
+  for (c in var_dist_normal) {
+    cat(c, " ")
+  }
+}
+```
+
+Una vez que hemos definido la función la llamamos para obtener los resultados:
+```{r}
+test_normalidad(newgames.word, alpha = 0.05)
+```
+
+De la anterior ejecución vemos que para la categoría "GAME WORD", todas las variables cuantitativas no siguen una distribución normal.
+
+Para concluir con este apartado realizamos el estudio de la homogeneidad de la varianza. En este caso la hipótesis nula es que las varianzas son iguales y la alternativa en caso contrario. Si el pvalor es menor que alfa rechazamos la hipótesis nula a favor de la alternativa.
+
+El análisis de la homogeneidad lo vamos a realizar con el fin de saber qué estadístico tenemos que aplicar para el contraste de hipótesis, por lo que vamos a tener cuenta las muestras de el ranking de un juego cuya categoría sea "GAME WORD" y con descargas altas, por otro lado el ranking de un juego cuya categoría sea "GAME WORD" y con descargas bajas:
+
+```{r}
+var.test(newgames.ins_low$rank, newgames.ins_high$rank, conf.level = 0.95)
+```
+
+Tal y como podemos apreciar en la anterior ejecución obtenemos un pvalor = 0.8599 > alfa = 0.05, como el pvalor es mayor que la alfa no podemos rechazar la hipótesis nula, por lo tanto las varianzas de ambas muestras son homogéneas con un nivel de significancia del 0.05.
+
 ## 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. 
 ### En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
 
