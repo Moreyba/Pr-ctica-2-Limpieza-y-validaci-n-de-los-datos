@@ -27,6 +27,7 @@ library(pROC)
 library(dplyr)
 library(nortest)
 library(PerformanceAnalytics)
+library(ggplot2)
 ```
 
 
@@ -633,6 +634,110 @@ cat("El rank que tendría nuestro juego sería el: ", round(predict(m3_rlm, df_g
 ****
 # 5. Representación de los resultados a partir de tablas y gráficas.
 ****
+
+Una vez que hemos realizado la limpieza y el análisis de datos, el cual no ha permitdo obtener información a partir de los mismos, vamos a continuar con el análisis pero de una forma visual, es decir, a partir de gráficos, de los cuales extraermos las conclusiones y las enlazaremos con el apartado anterior.
+
+Pero antes de continuar, para facilitar la representación de la información, vamos a discretizar las variables significativas según el análisis hecho anteriormente, es decir, la variable rank, los ratings e int_installs:
+```{r}
+newgames_discretizado = newgames.word
+
+# Discretización de rank
+newgames_discretizado["d-rank"] = ordered(cut(newgames_discretizado[["rank"]], breaks = c(0,26,74,100), labels = c("Alto", "Medio", "Bajo")))
+
+# Discretización de X5.star.ratings
+newgames_discretizado["d-X5.star.ratings"] = ordered(cut(newgames_discretizado[["X5.star.ratings"]], breaks = c(0,121285,284850,1395623), labels = c("Bajo", "Medio", "Alto")))
+ 
+# Discretización de X4.star.ratings
+newgames_discretizado["d-X4.star.ratings"] = ordered(cut(newgames_discretizado[["X4.star.ratings"]], breaks = c(0,21082,71891,222920), labels = c("Bajo", "Medio", "Alto")))
+ 
+# Discretización de X3.star.ratings
+newgames_discretizado["d-X3.star.ratings"] = ordered(cut(newgames_discretizado[["X3.star.ratings"]], breaks = c(0,8884,29994,82726), labels = c("Bajo", "Medio", "Alto")))
+ 
+# Discretización de X2.star.ratings
+newgames_discretizado["d-X2.star.ratings"] = ordered(cut(newgames_discretizado[["X2.star.ratings"]], breaks = c(0,3011,10747,32652), labels = c("Bajo", "Medio", "Alto")))
+ 
+# Discretización de X1.star.ratings
+newgames_discretizado["d-X1.star.ratings"] = ordered(cut(newgames_discretizado[["X1.star.ratings"]], breaks = c(0,7122,26938,105952), labels = c("Bajo", "Medio", "Alto")))
+ 
+# Discretización de int_installs
+newgames_discretizado["d-int_installs"] = ordered(cut(newgames_discretizado[["int_installs"]], breaks = c(0, 9999999, 100000000), labels = c("Bajo","Alto")))
+```
+
+Vemos el cómo se han creado dichas variables:
+```{r}
+str(newgames_discretizado)
+head(newgames_discretizado)
+```
+
+Una vez que ya tenemos las variables discretizadas vamos a realizar la representación del análisis de estos datos. Lo primero que vamos a analizar es el ranking respecto al número de instalaciones, este fue el objeto de estudio del contraste de hipótesis:
+```{r}
+ggplot(data = newgames_discretizado, aes(x=`d-int_installs`,fill=`d-rank`)) + geom_bar(position = "fill") +
+  xlab("Número de instalaciones") +
+  ylab("Frecuencia") +
+  scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
+  ggtitle("Ranking respecto al número de instalaciones")
+```
+
+Del anterior gráfico vemos que a mayor número de instalaciones como es lógico un mayor ranking tenemos, pero tal y como vimos en el contraste de hipósteis esto no significa que siempre sea así, por lo que no podemos garantizar que si un juego tiene muchas descargas vaya a tener un ranking alto.
+
+El siguiente aspecto a analizar es el número de estrellas que tiene cada juego y si esto significa un mayor ranking.
+
+Por lo que primero vamos a analizar el número de calificaciones de 5 estrellas:
+```{r}
+ggplot(data = newgames_discretizado, aes(x=`d-X5.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+  xlab("Número de calificaciones de 5 estrellas") +
+  ylab("Frecuencia") +
+  scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
+  ggtitle("Ranking respecto al número de calificaciones de 5 estrellas")
+```
+
+Como podemos apreciar, aquellos juego que tienen un elevado número de calificaciones significa que el juego tiene un ranking mayor, por contra si el número de calificaciones es bajo es más probable tener un juego con un ranking bajo o medio.
+
+Realizamos el mismo análisis pero para las calificacioens de 4 estrellas:
+```{r}
+ggplot(data = newgames_discretizado, aes(x=`d-X4.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+  xlab("Número de calificaciones de 4 estrellas") +
+  ylab("Frecuencia") +
+  scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
+  ggtitle("Ranking respecto al número de calificaciones de 4 estrellas")
+```
+
+Al igual que sucedía antes, cuanto más elevado sea el número de calificaciones más probable que el juego tenga un ranking alto o medio, sin embargo si tenemos pocas calificaciones de cuatro estrellas la posición en el ranking va a ser peor.
+
+Analizamos las calificaciones de 3 estrellas:
+```{r}
+ggplot(data = newgames_discretizado, aes(x=`d-X3.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+  xlab("Número de calificaciones de 3 estrellas") +
+  ylab("Frecuencia") +
+  scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
+  ggtitle("Ranking respecto al número de calificaciones de 3 estrellas")
+```
+
+Siguiendo con la tónica de los casos anterior, a mayor número de calificaciones de 3 estrellas mejor posición en el ranking y a menor número peor posición.
+
+Seguimos analizando las calificaciones de 2 estrellas:
+```{r}
+ggplot(data = newgames_discretizado, aes(x=`d-X2.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+  xlab("Número de calificaciones de 2 estrellas") +
+  ylab("Frecuencia") +
+  scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
+  ggtitle("Ranking respecto al número de calificaciones de 2 estrellas")
+```
+
+Aunque lo lógico sería que a medida que vamos reduciendo las estrellas de un juego su ranking sea peor, vemos que esto no es del todo cierto, ya que en este caso los juegos que siguen teniendo un elevado número de calificaciones de 2 estrellas siguen con un ranking elevado.
+
+Esto solo tiene una explicación, y es que lo juegos mejor posicionados en el ranking tienen un mayor número de calificaciones en todos los niveles, es decir, tanto en 5 como 4, 3, 2 o una estrella. Por lo tanto, al hacer el análisis del ranking para cada nivel de califación vemos que los juegos con una alta posición siempre tienen el mayor número de calificaciones (aunque en este caso una califiación de 2 estrellas sea algo negativo), por otro lado, esto no significa que los juegos con una posición baja en el ranking tengan bajo cada uno de los niveles de califiación, seguramente el número de calificaciones para cada nivel sea menor que los juego mejor posicionados, pero en comparativa éstos tienen peores calificaciones.  
+
+Por último, analizamos el número de calificaciones de 1 estrellas:
+```{r}
+ggplot(data = newgames_discretizado, aes(x=`d-X1.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+  xlab("Número de calificaciones de 1 estrellas") +
+  ylab("Frecuencia") +
+  scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
+  ggtitle("Ranking respecto al número de calificaciones de 1 estrellas")
+```
+
+Al igual que sucedía en el caso anterior, los juegos mejor posicionados en el ranking tienen un mayor número de calificaciones de 1 estrella, pero esto se debe a que tienen un mayor número de calificaciones en todos los niveles, pero en comparativa los juegos con peor ranking tienen peores valoraciones en todos los niveles.
 
 ****
 # 6. Resolución del problema. 
