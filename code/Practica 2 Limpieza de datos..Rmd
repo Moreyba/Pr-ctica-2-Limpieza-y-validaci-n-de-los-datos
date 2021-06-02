@@ -570,6 +570,65 @@ De la anterior ejecución vemos que el pvalor = 1 y alfa = 0.05, como el pvalor 
 
 #### Modelo de regresión lineal
 
+Tal y como se definió en el primer apartado de la práctica, podría ser interesante el predecir qué ranking va a tener nuestro juego dentro de la categorñia GAME WORD, esto podría sernos de utilidad para saber si nuestro juego va a tener éxisto o no dependiendo  de las características que lo definen, como por ejemplo: el rating, el número de instalaciones...
+
+Como a priori no sabemos qué modelo se va a comportar mejor para nuestros datos, vamos a crear diferentes modelos de regresión lineal, posteriormente comprobaremos qué modelo se comporta mejor y usaremos éste para hacer una predicción.
+
+Para evaluar qué modelo es el mejor nos fijaremos en la medida estadística R2, ésta nos indica cómo de cerca están los datos respecto a la recta de regresión, o dicho en otras palabras cuánta variabilidad es explicado por el modelo, por lo que a mayor R2 mejor es el modelo.
+
+Para definir un modelo de regresión lineal tenemos que determinar cuál es la variable objetivo, en nuestro caso el campo "rank" y las variables independientes.
+
+Para el primer modelo vamos a usar como variable independientes solamente el crecimiento en 30 días y el número de instalaciones:
+```{r}
+m1_rlm = lm(rank ~ growth..30.days. + int_installs, data = newgames.word)
+```
+
+En el segundo modelo vamos a continuar con el número de instalaciones, pero añadimos los ratings de 5, 3 y 1 estrellas:
+```{r}
+m2_rlm = lm(rank ~ X5.star.ratings + X3.star.ratings + X1.star.ratings + int_installs, data = newgames.word)
+```
+
+El último modelo es similar al anterior, pero añadiendo los ratings de 4 y 2 estrellas:
+```{r}
+m3_rlm = lm(rank ~ X5.star.ratings + X4.star.ratings + X3.star.ratings + X2.star.ratings + X1.star.ratings + int_installs, data = newgames.word)
+```
+
+Una vez que hemos creado todos los modelos obtenemos el coeficiente de determinación (R2) para cada uno de ellos:
+```{r}
+vec_modelos = c("Modelo 1", "Modelo 2", "Modelo 3")
+vec_R2 = c(summary(m1_rlm)$r.squared, summary(m2_rlm)$r.squared, summary(m3_rlm)$r.squared)
+df_R2 = data.frame(
+  vec_modelos, 
+  vec_R2
+)
+names(df_R2) = c("Modelos", "R2")
+
+head(df_R2)
+```
+
+Observamos que el modelo que mejor se comporta con nuestros datos es el tercero, es decir, aquel en el que incluimos todas las variables significativas que están correlacionadas con la variable objetivo, en nuestro caso con rank.
+
+Finalmente, vamos a predecir qué posición dentro del ranking tendría un juego creado para la categoría GAME WORD:
+```{r}
+head(newgames.word)
+```
+
+
+```{r}
+# Creamos el dataframe con los valores para predecir
+df_game = data.frame(
+  X5.star.ratings = 945761,
+  X4.star.ratings = 30156,
+  X3.star.ratings = 5123,
+  X2.star.ratings = 439,
+  X1.star.ratings = 27899,
+  int_installs = 5000000
+)
+
+# Predecimos el rank que tendría nuestro juego
+cat("El rank que tendría nuestro juego sería el: ", round(predict(m3_rlm, df_game)))
+```
+
 
 ****
 # 5. Representación de los resultados a partir de tablas y gráficas.
