@@ -77,6 +77,7 @@ En primer lugar, realizamos la carga del fichero que contiene los datos para nue
 ```{r, echo=TRUE}
 # read data
 games <- read.csv("../data/android-games.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+
 n.var <- names(games)
 
 #View(games)
@@ -325,7 +326,65 @@ write.csv(newgames, file=my.newfile, row.names = FALSE)
 ****
 # 4. Análisis de los datos.
 ****
+
 ## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
+
+Antes de comenzar con el análisis en sí, vamos a seleccionar diferentes grupos que pueden ser interesantes a la hora de analizar o comparar. Cabe destacar que no todos los grupos se van usar, pero pueden ser de utilidad para estudios posteriores, es decir, en el dataset original la variable rank viene determinada para cada categoría (si la categoría es "SPORTS" rank toma valores del 1 al 100 para los juegos de tipo sport, si la categoría es "STRATEGY" rank vuelve a tomar valores entre 1 y 100 para los juegos de dicha categoría). Como el objetivo nuestro es analizar el ranking, éste solo tiene sentido analizarlo para cada categoría de juego, es por ello que las agrupaciones las vamos a hacer por categoría:
+
+```{r}
+# Juegos cuya categoría es GAME ACTION
+newgames.action = newgames[newgames$category_num2 == 1,]
+
+# Juegos cuya categoría es GAME ADVENTURE
+newgames.adventure = newgames[newgames$category_num2 == 2,]
+
+# Juegos cuya categoría es GAME ARCADE
+newgames.arcade = newgames[newgames$category_num2 == 3,]
+
+# Juegos cuya categoría es GAME BOARD
+newgames.board = newgames[newgames$category_num2 == 4,]
+
+# Juegos cuya categoría es GAME CARD
+newgames.card = newgames[newgames$category_num2 == 5,]
+
+# Juegos cuya categoría es GAME CASINO
+newgames.casino = newgames[newgames$category_num2 == 6,]
+
+# Juegos cuya categoría es GAME CASUAL
+newgames.casual = newgames[newgames$category_num2 == 7,]
+
+# Juegos cuya categoría es GAME EDUCATIONAL
+newgames.educational = newgames[newgames$category_num2 == 8,]
+
+# Juegos cuya categoría es GAME MUSIC
+newgames.music = newgames[newgames$category_num2 == 9,]
+
+# Juegos cuya categoría es GAME PUZZLE
+newgames.puzzle = newgames[newgames$category_num2 == 10,]
+
+# Juegos cuya categoría es GAME RACING
+newgames.racing = newgames[newgames$category_num2 == 11,]
+
+# Juegos cuya categoría es GAME ROLE PLAYING
+newgames.role = newgames[newgames$category_num2 == 12,]
+
+# Juegos cuya categoría es GAME SIMULATION
+newgames.simulation = newgames[newgames$category_num2 == 13,]
+
+# Juegos cuya categoría es GAME SPORTS
+newgames.sports = newgames[newgames$category_num2 == 14,]
+
+# Juegos cuya categoría es GAME STRATEGY
+newgames.strategy = newgames[newgames$category_num2 == 15,]
+
+# Juegos cuya categoría es GAME TRIVIA
+newgames.trivia = newgames[newgames$category_num2 == 16,]
+
+# Juegos cuya categoría es GAME WORD
+newgames.word = newgames[newgames$category_num2 == 17,]
+```
+
+
 ## 4.2. Comprobación de la normalidad y homogeneidad de la varianza.
 ## 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. 
 ### En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
