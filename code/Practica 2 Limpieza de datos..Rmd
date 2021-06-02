@@ -26,6 +26,7 @@ library(readr)
 library(pROC)
 library(dplyr)
 library(nortest)
+library(PerformanceAnalytics)
 ```
 
 
@@ -479,6 +480,96 @@ Tal y como podemos apreciar en la anterior ejecución obtenemos un pvalor = 0.85
 
 ## 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. 
 ### En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
+
+#### ¿Qué variables cuantitativas influyen más en el ranking?
+
+En este apartado lo que vamos realizar es calcular la correlacion que hay entre cada una de las variables cuantitativas respecto al ranking, pero si la variable cuantitativa solo toma un valor la eliminamos para calcular la correlación:
+```{r}
+correlacion = function(df) {
+  
+  cols_eliminar = c()
+  col_names = colnames(df)
+  
+  # Comprobamos que las variables tengan más de un valor único, ya que de lo contrario no funciona ad.test
+  for (i in 1:ncol(df)) {
+     if (is.numeric(df[, i]) | is.integer(df[, i])) { 
+       if (length(unique(df[, i])) == 1) cols_eliminar[length(cols_eliminar) + 1] = col_names[i]
+     }
+  }
+  
+  # Eliminamos dichas variables
+  df = df[, !(names(df) %in% cols_eliminar)]
+  
+  col_names = colnames(df)
+  
+  cat("Correlación respecto al campo \"rank\"\n")
+  for (i in 2:ncol(df)) { # Comenzamos en dos ya que la primera columna siempre es el ranking
+    
+    if (is.numeric(df[, i]) | is.integer(df[, i])) {
+      value_corr = cor.test(df[, "rank"], df[, i])$estimate
+      cat("\n", col_names[i], " ", value_corr)
+    }
+  }
+  
+  # for (i in 2:ncol(df)) {
+  #   if (is.numeric(df[, i]) | is.integer(df[, i])) {
+  #     chart.Correlation(data.frame(df[, "rank"], df[, i]))
+  #   }
+  # }
+  
+}
+```
+
+Una vez definida la función que nos devuelve la correlación de cada variable respecto al ranking, la llamamos:
+```{r}
+correlacion(newgames.word)
+```
+
+Como podemos apreciar, el crecimiento en los últimos 30 días está muy poco correlacionado con el rank. Sin embargo vemos que los ratings están altamente correlacionados de forma inversa, es decir, cuanto más pequeño sea el número del ranking (mejor juego es) más valoraciones tiene de 5, 4 y 3 estrellas, y a medida que el ranking aumenta (peor es el juego) menos valoraciones positivas recibe el mismo.
+
+Otro aspecto a tener en cuenta es que cuanto mejor sea el juego (menor número en el rank) más descargas se producen del mismo.
+
+Por lo tanto, vemos que estas variables influyen altamente en el ranking del juego.
+
+Otra forma de calcular la correlación de forma más detalla junto con la distribución de cada variable y cómo de importante es cada una de ellas es haciendo uso de una librería externa, las conclusiones que obtenemos son las mismas que en el caso anterior:
+```{r}
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$growth..30.days.))
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$X5.star.ratings))
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$X4.star.ratings))
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$X3.star.ratings))
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$X2.star.ratings))
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$X1.star.ratings))
+chart.Correlation(data.frame(newgames.word$rank, newgames.word$int_installs))
+```
+
+#### ¿El ranking de los juegos de la categoría GAME WORD es superior en caso de tener unas instalaciones elevadas?
+
+Continuando con las pruebas estadísticas, ahora vamos a hacer un contraste de hipótesis de dos muestras sobre la media. Una muestra va a contener todos los juegos de la categoría GAME WORD cuyas descargas sean inferiores a 10 millones, y la seguna muestra va a contener los juego de la categoría GAME WORD cuyas descargas sean iguales o superiores a 10 millones:
+```{r}
+ranking.ins_low = newgames.ins_low$rank
+ranking.ins_high = newgames.ins_high$rank
+```
+
+En este caso la hipótesis nula (H0) es que la media de ambas muestras son iguales, y la hipótesis alternativa (H1) la media de los juegos con instalaciones elevadas es mayor que la media de los juegos con instalaciones bajas:
+
+H0: media_inst_elevadas = media_inst_bajas
+H1: media_inst_elevadas > media_inst_bajas
+
+Para aplicar el test necesitamos asumir la normalidad de los datos, en nuestro caso podemos aplicar el Teorema del Límite Central, el cual nos indica que la media de una muestra que sea lo suficientemente grande (mayor de 30 observaciones) sigue una distribución normal. Al poder calcular la media de ambas muestras esto lo cumplimos, solo nos hace falta comprobar que tenemos el número de observaciones mínimas, pero tal y como vemos a continuación esto también se cumple:
+```{r}
+cat("El número de observaciones de instalaciones bajas es: ", nrow(newgames.ins_low))
+cat("El número de observaciones de instalaciones altas es: ", nrow(newgames.ins_high))
+```
+
+Una vez asumida la normalidad, hacemos uso de la función t.test que nos devuelve el pvalor para este caso, consideramos un nivel de significancia del 0.05:
+```{r}
+t.test(ranking.ins_high, ranking.ins_low, alternative = "greater", var.equal = TRUE)
+```
+
+De la anterior ejecución vemos que el pvalor = 1 y alfa = 0.05, como el pvalor no es menor que la alfa no podemos rechazar la hipótesis nula, es decir, no podemos garantizar que el ranking de un juego cuya categoría es GAME WORD y el número de instalaciones sea elevado tenga un ranking superior que un juego de la misma categoría pero con un número de instalaciones bajo.
+
+#### Modelo de regresión lineal
+
 
 ****
 # 5. Representación de los resultados a partir de tablas y gráficas.
