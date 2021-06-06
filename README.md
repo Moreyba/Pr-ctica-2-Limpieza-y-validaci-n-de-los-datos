@@ -16,8 +16,8 @@ https://www.kaggle.com/dhruvildave/top-play-store-games?select=android-games.csv
 ## Ficheros del código fuente
 
 - **code/Práctica 2 Limpieza de datos.Rmd** : Archivo con el código en R que se ha utilizado para cada uno de los apartados de la práctica.
-- **code/Práctica 2 Limpieza de datos.pdf** : Archivo en pdf donde se muetra el contenido de la práctica.
-- **code/Práctica 2 Limpieza de datos.html** : Archivo en html donde se muetra el contenido de la práctica.
+- **code/Práctica 2 Limpieza de datos.pdf** : Archivo en pdf donde se muestra el contenido de la práctica.
+- **code/Práctica 2 Limpieza de datos.html** : Archivo en html donde se muestra el contenido de la práctica.
 - **data/android-games.csv** : Archivo original con los datos sobres los que hemos hecho el análisis.
 - **data/newgames.csv** : Archivo con los datos tras hacer la limpieza de datos.
 
