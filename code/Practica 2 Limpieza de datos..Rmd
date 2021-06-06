@@ -4,13 +4,13 @@ authors: "Mario Ubierna San Mamés y Moreyba García Cedrés"
 date: '`r format(Sys.Date(),"%e de %B %Y")`'
 output: 
   html_document:
+    number_sections: no
     toc: yes
-    number_sections: yes
     toc_depth: 2
+    toc_float: yes
   pdf_document: 
     latex_engine: xelatex
 ---
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -29,7 +29,6 @@ library(nortest)
 library(PerformanceAnalytics)
 library(ggplot2)
 ```
-
 
 ****
 # 1. Descripción del dataset. 
@@ -72,14 +71,14 @@ La respuesta a la pregunta que nos hemos planteado se resolverá a lo largo de l
 ****
 # 2. Integración y selección de los datos de interés a analizar.
 ****
-
 ## 2.1. Integración de los datos.
 
 En primer lugar, realizamos la carga del fichero que contiene los datos para nuestro análisis en formato csv, el cual está delimitado por comas y los decismales "·". Obtenemos como resultado de la llamada a la función read.csv() será un objeto data.frame.
  
 ```{r, echo=TRUE}
 # read data
-games <- read.csv("../data/android-games.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
+games <- read.csv("../data/android-games.csv", header=TRUE, sep=",",
+                  na.strings="NA", dec=".", strip.white=TRUE)
 
 n.var <- names(games)
 
@@ -92,17 +91,16 @@ Mostramos las primeras lineas del dataset, así como su encabezado.
 head(games)
 ```
 
-
 Una vez cargados los datos comprobamos que nuestro fichero contiene `r nrow(games)` registros y `r ncol(games)` variables.
 
 Las variables son de tipo `r toString(n.var)`.
-
 
 Como podemos en el resumen de los estadisticos descriptivos de las distintas variables no hay ningún campo no informado.
 
 ```{r, echo=TRUE}
 summary(games)
 ```
+
 ### 2.2. Tipo variables.
 
 Comprobamos de que tipo es cada variable.
@@ -128,15 +126,15 @@ Observamos que la variable title toma un valor distinto para cada registro. Más
 
 ## 2.3. Selección de variables.
 
-Para nuestro análisis vamos a eliminar del dataset los campos calculados, en nuetro caso son la media de estrellas que es la variable **average.rating, paid y total.ratings**. Por otro lado, para nuestro analisis es suficiente con uno de los porcentajes de crecimiento por tanto eliminamos tambien la variable **growth..60.days**.
+Para nuestro análisis vamos a eliminar del dataset los campos calculados, en nuetro caso son la media de estrellas que es la variable **average.rating, paid y total.ratings**. Por otro lado, para nuestro análisis es suficiente con uno de los porcentajes de crecimiento por tanto eliminamos tambien la variable **growth..60.days**. El resto de variables consideramos que son necesarias para el objetivo de nuesto análisis, ver como influyen en el ranking de un video juego.
 
 ```{r, echo=TRUE}
 games <-games[,c(-3,-5,-7,-15)] # Elimienamos las variables en cuestión.
 
 head(games)
 ```
-Como resusltado obtenemos un dataset que contiene `r nrow(games)` registros y `r ncol(games)` variables.
 
+Como resusltado obtenemos un dataset que contiene `r nrow(games)` registros y `r ncol(games)` variables.
 Las variables son de tipo `r toString(n.var)`.
 
 ****
@@ -156,8 +154,7 @@ games$category_num2 <- as.integer(games$category_factor)
 head(games)
 ```
 
-
-En el caso de la variable **Install** hemos supuesto que M Megabytes y que k son kilobytes, por lo que hemos multiplicado la M por 10^6 para pasalo a bytes y k por 10^3.
+En el caso de la variable **Install** hemos supuesto que M millones y que k son miles, por lo que hemos multiplicado la M por 10^6 para pasalo a bytes y k por 10^3.
 
 ```{r, echo=TRUE}
 converter<-function(valueToConvert) {
@@ -171,15 +168,12 @@ converter<-function(valueToConvert) {
     }
    intValue
 }
-
 games$int_installs <- sapply(games$installs, FUN=converter)
-
 head(games)
-
 ```
 
 
-
+Selecionamos las variables con las que vamos a hacer nuestro análisis.
 
 ```{r, echo=TRUE}
 games <-games[,c(-3,-6,-12,-13)] # Elimienamos las variables en variables que sobran
@@ -191,7 +185,6 @@ Finalmente, tras tratar las variables mal informadas nos queda nuestro dataset f
 #read data
 res <- sapply(games,  class)
 kable(data.frame(variables=names(res),clase=as.vector(res)))
-
 ```
 
 Como podemos ver solo nos hemos quedado con una varible categoricas **Title**y el resto las hemos reconvertido en númericas.
@@ -206,7 +199,6 @@ summary(games)
 
 Con la función summary vemos si existen valores nulos y cual es el valor maximo y minimo que toma cada variable. La variable price toma valor cero pero es de interes para el análisis ya que significa que el usuario no ha pagando nada. Por otro lado, la variable growth..30.days. también toma valor 0 en el caso de no haber crecimiento.
 
-
 ##    3.2. Identificación y tratamiento de valores extremos.
 
 Los valores extremos o outliers son aquellos que parecen no ser congruentes sin los comparamos con el resto de los datos. Para identificarlos, podemos hacer uso de dos vías: (1) representar un diagrama de caja por cada variable y ver qué valores distan mucho del rango intercuartílico (la caja) o (2) utilizar la función boxplots.stats() de R, la cual se emplea a continuación. Así, se mostrarán sólo los valores atípicos para aquellas variables que los contienen:
@@ -215,23 +207,18 @@ Los valores extremos o outliers son aquellos que parecen no ser congruentes sin 
 boxplot.stats(games$rank)$out
 
 ```
-
 ```{r, echo=TRUE}
 boxplot.stats(games$int_installs)$out
 ```
-
 
 ```{r, echo=TRUE}
 out_growth <- boxplot.stats(games$growth..30.days.)$out
 head(out_growth)
 ```
 
-
 ```{r, echo=TRUE}
 boxplot.stats(games$price)$out
-
 ```
-
 
 ```{r, echo=TRUE}
 out_X5 <- boxplot.stats(games$X5.star.ratings)$out
@@ -273,12 +260,11 @@ for(i in 1:ncol(games)) {
 par(mfrow=c(1,1))
 ```
 
-
 Se considera valores extremos a aquellos valores cuando se encuentra alejado 3 desviaciones estándar con respecto a la media. Por ello, en muchos trabajos se utiliza la representación de los datos mediante gráficos de cajas (boxplots), con el objetivo de detectar dichos outliers.
 
 Gráficamente vemos que las variables con valores muy por encima de la medía son paid, que no se puede considerar outliers ya que la mayoría de lo juegos son gratuitos, también int_install está muy por encima de la media pero no parece ser incorrecto porque es posible que hayas juegos con más megas que otros.
 
-Las variables que si es posible que sean erroneos porque con fines mal intensionados se puede haber añadido excesivas valaraciones a un juego por medios automaticos (Rotos) de forma que se pueden haber valores extemos estas son:
+Las variables que si es posible que sean erroneos porque con fines mal intensionados se puede haber añadido excesivas valaraciones a un juego por medios automaticos (Robot) de forma que se pueden haber valores extemos estas son:
  - growth..30.days.
  - X5.star.ratings    
  - X4.star.ratings   
@@ -309,12 +295,9 @@ for(i in 1:ncol(newgames)) {
   }
 }
 par(mfrow=c(1,2))
-
 ```
 
 Hemos pasado de `r filas_old` filas a `r filas_new` filas.
- 
-
 
 Por último, exportamos el nuevo dataset a un nuevo csv.
 
@@ -324,12 +307,9 @@ write.csv(newgames, file=my.newfile, row.names = FALSE)
 
 ```
 
-
-
 ****
 # 4. Análisis de los datos.
 ****
-
 ## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).
 
 Antes de comenzar con el análisis en sí, vamos a seleccionar diferentes grupos que pueden ser interesantes a la hora de analizar o comparar. Cabe destacar que no todos los grupos se van usar, pero pueden ser de utilidad para estudios posteriores, es decir, en el dataset original la variable rank viene determinada para cada categoría (si la categoría es "SPORTS" rank toma valores del 1 al 100 para los juegos de tipo sport, si la categoría es "STRATEGY" rank vuelve a tomar valores entre 1 y 100 para los juegos de dicha categoría). Como el objetivo nuestro es analizar el ranking, éste solo tiene sentido analizarlo para cada categoría de juego, es por ello que las agrupaciones las vamos a hacer por categoría.
@@ -404,11 +384,12 @@ Una vez que tenemos los grupos que queremos analizar/comparar vamos a comprobar 
 
 Dado que el objetivo de esta práctica es demostrar el conocimiento adquirido y no hacer un estudio completo, vamos a realizar el análisis de los datos a partir de un grupo definido en el apartado anterior, en nuestro caso hemos elegido la categoría "GAME WORD", por lo que vamos a hacer uso del dataframe newgames.word. El estudio que vamos a realizar para esta categoría se podría hacer para todas las demás y así tener un análisis completo del mercado para cada categoría.
 
-Una vez hecha esta aclaración realizamos la comprobación de la normalidad, para ello hacemos uso de una librería externa y poder aplicar sobre las variables cuantitativas el test de Anderson-Darling.
+Una vez hecha esta aclaración realizamos la **comprobación de la normalidad**, para ello hacemos uso de una librería externa y poder aplicar sobre las variables cuantitativas el test de Anderson-Darling.
 
 Paratimos de la base que la hipótesis nula es que la variable sigue una distribución normal, y la hipótesis alternativa que no sigue dicha distribución, por lo tanto vamos a comprobar para cada variable si el pvalor obtenido es menor que el nivel de significacia, es decir, si pvalor < alfa, de ser así podemos rechazar la hipótesis nula a favor de la aternativa.
 
 Definimos la función que nos realiza este cálculo:
+
 ```{r}
 test_normalidad = function(df, alpha = 0.05) {
   # Inicializamos
@@ -417,17 +398,20 @@ test_normalidad = function(df, alpha = 0.05) {
   cols_eliminar = c()
   col_names = colnames(df)
   
-  # Comprobamos que las variables tengan más de un valor único, ya que de lo contrario no funciona ad.test
+  # Comprobamos que las variables tengan más de un valor único, 
+  # ya que de lo contrario no funciona ad.test
   for (i in 1:ncol(df)) {
      if (is.numeric(df[, i]) | is.integer(df[, i])) { 
-       if (length(unique(df[, i])) == 1) cols_eliminar[length(cols_eliminar) + 1] = col_names[i]
+       if (length(unique(df[, i])) == 1) 
+          cols_eliminar[length(cols_eliminar) + 1] = col_names[i]
      }
   }
   
   # Eliminamos dichas variables
   df = df[, !(names(df) %in% cols_eliminar)]
   
-  # Añadimos dichas variables a la lista de variables que no siguen una distribución normal
+  # Añadimos dichas variables a la lista de variables que no siguen 
+  # una distribución normal
   for (i in 1:length(cols_eliminar)) {
     var_no_dist_normal[i] = cols_eliminar[i]
   }
@@ -446,7 +430,6 @@ test_normalidad = function(df, alpha = 0.05) {
         var_dist_normal[length(var_dist_normal) + 1] = col_names[i]
       }
     }
-    
   }
   
   # Imprimimos por pantalla los resultado
@@ -471,7 +454,7 @@ De la anterior ejecución vemos que para la categoría "GAME WORD", todas las va
 
 Para concluir con este apartado realizamos el estudio de la homogeneidad de la varianza. En este caso la hipótesis nula es que las varianzas son iguales y la alternativa en caso contrario. Si el pvalor es menor que alfa rechazamos la hipótesis nula a favor de la alternativa.
 
-El análisis de la homogeneidad lo vamos a realizar con el fin de saber qué estadístico tenemos que aplicar para el contraste de hipótesis, por lo que vamos a tener cuenta las muestras de el ranking de un juego cuya categoría sea "GAME WORD" y con descargas altas, por otro lado el ranking de un juego cuya categoría sea "GAME WORD" y con descargas bajas:
+**El análisis de la homogeneidad** lo vamos a realizar con el fin de saber qué estadístico tenemos que aplicar para el contraste de hipótesis, por lo que vamos a tener cuenta las muestras de el ranking de un juego cuya categoría sea "GAME WORD" y con descargas altas, por otro lado el ranking de un juego cuya categoría sea "GAME WORD" y con descargas bajas, para ello útilizaremos en contraste de hipotesisis F de Fisher:
 
 ```{r}
 var.test(newgames.ins_low$rank, newgames.ins_high$rank, conf.level = 0.95)
@@ -480,21 +463,25 @@ var.test(newgames.ins_low$rank, newgames.ins_high$rank, conf.level = 0.95)
 Tal y como podemos apreciar en la anterior ejecución obtenemos un pvalor = 0.8599 > alfa = 0.05, como el pvalor es mayor que la alfa no podemos rechazar la hipótesis nula, por lo tanto las varianzas de ambas muestras son homogéneas con un nivel de significancia del 0.05.
 
 ## 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. 
+
 ### En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
 
-#### ¿Qué variables cuantitativas influyen más en el ranking?
+#### 4.3.1 ¿Qué variables cuantitativas influyen más en el ranking?
 
 En este apartado lo que vamos realizar es calcular la correlacion que hay entre cada una de las variables cuantitativas respecto al ranking, pero si la variable cuantitativa solo toma un valor la eliminamos para calcular la correlación:
+
 ```{r}
 correlacion = function(df) {
   
   cols_eliminar = c()
   col_names = colnames(df)
   
-  # Comprobamos que las variables tengan más de un valor único, ya que de lo contrario no funciona ad.test
+  # Comprobamos que las variables tengan más de un valor único, 
+  # ya que de lo contrario no funciona ad.test
   for (i in 1:ncol(df)) {
      if (is.numeric(df[, i]) | is.integer(df[, i])) { 
-       if (length(unique(df[, i])) == 1) cols_eliminar[length(cols_eliminar) + 1] = col_names[i]
+       if (length(unique(df[, i])) == 1) 
+         cols_eliminar[length(cols_eliminar) + 1] = col_names[i]
      }
   }
   
@@ -504,7 +491,8 @@ correlacion = function(df) {
   col_names = colnames(df)
   
   cat("Correlación respecto al campo \"rank\"\n")
-  for (i in 2:ncol(df)) { # Comenzamos en dos ya que la primera columna siempre es el ranking
+  for (i in 2:ncol(df)) { # Comenzamos en dos ya que la primera 
+                          #columna siempre es el ranking
     
     if (is.numeric(df[, i]) | is.integer(df[, i])) {
       value_corr = cor.test(df[, "rank"], df[, i])$estimate
@@ -522,6 +510,7 @@ correlacion = function(df) {
 ```
 
 Una vez definida la función que nos devuelve la correlación de cada variable respecto al ranking, la llamamos:
+
 ```{r}
 correlacion(newgames.word)
 ```
@@ -532,7 +521,8 @@ Otro aspecto a tener en cuenta es que cuanto mejor sea el juego (menor número e
 
 Por lo tanto, vemos que estas variables influyen altamente en el ranking del juego.
 
-Otra forma de calcular la correlación de forma más detalla junto con la distribución de cada variable y cómo de importante es cada una de ellas es haciendo uso de una librería externa, las conclusiones que obtenemos son las mismas que en el caso anterior:
+Otra forma de calcular la correlación de forma más detallada junto con la distribución de cada variable y cómo de importante es cada una de ellas sería haciendo uso de una librería externa, las conclusiones que obtenemos son las mismas que en el caso anterior:
+
 ```{r}
 chart.Correlation(data.frame(newgames.word$rank, newgames.word$growth..30.days.))
 chart.Correlation(data.frame(newgames.word$rank, newgames.word$X5.star.ratings))
@@ -543,9 +533,9 @@ chart.Correlation(data.frame(newgames.word$rank, newgames.word$X1.star.ratings))
 chart.Correlation(data.frame(newgames.word$rank, newgames.word$int_installs))
 ```
 
-#### ¿El ranking de los juegos de la categoría GAME WORD es superior en caso de tener unas instalaciones elevadas?
+#### 4.3.2 ¿El ranking de los juegos de la categoría GAME WORD es superior en caso de tener unas instalaciones elevadas?  
 
-Continuando con las pruebas estadísticas, ahora vamos a hacer un contraste de hipótesis de dos muestras sobre la media. Una muestra va a contener todos los juegos de la categoría GAME WORD cuyas descargas sean inferiores a 10 millones, y la seguna muestra va a contener los juego de la categoría GAME WORD cuyas descargas sean iguales o superiores a 10 millones:
+Continuando con las pruebas estadísticas, ahora vamos a hacer un contraste de hipótesis de dos muestras sobre la media, utilizaremos la **Prueba de T-Studente** (t-test) Una muestra va a contener todos los juegos de la categoría GAME WORD cuyas descargas sean inferiores a 10 millones, y la seguna muestra va a contener los juego de la categoría GAME WORD cuyas descargas sean iguales o superiores a 10 millones:
 ```{r}
 ranking.ins_low = newgames.ins_low$rank
 ranking.ins_high = newgames.ins_high$rank
@@ -556,7 +546,8 @@ En este caso la hipótesis nula (H0) es que la media de ambas muestras son igual
 H0: media_inst_elevadas = media_inst_bajas
 H1: media_inst_elevadas > media_inst_bajas
 
-Para aplicar el test necesitamos asumir la normalidad de los datos, en nuestro caso podemos aplicar el Teorema del Límite Central, el cual nos indica que la media de una muestra que sea lo suficientemente grande (mayor de 30 observaciones) sigue una distribución normal. Al poder calcular la media de ambas muestras esto lo cumplimos, solo nos hace falta comprobar que tenemos el número de observaciones mínimas, pero tal y como vemos a continuación esto también se cumple:
+Para aplicar el test de T-Student necesitamos asumir la normalidad de los datos, en nuestro caso podemos aplicar el Teorema del Límite Central, el cual nos indica que la media de una muestra que sea lo suficientemente grande (mayor de 30 observaciones) sigue una distribución normal. Al poder calcular la media de ambas muestras esto lo cumplimos, solo nos hace falta comprobar que tenemos el número de observaciones mínimas, pero tal y como vemos a continuación esto también se cumple:
+
 ```{r}
 cat("El número de observaciones de instalaciones bajas es: ", nrow(newgames.ins_low))
 cat("El número de observaciones de instalaciones altas es: ", nrow(newgames.ins_high))
@@ -569,7 +560,7 @@ t.test(ranking.ins_high, ranking.ins_low, alternative = "greater", var.equal = T
 
 De la anterior ejecución vemos que el pvalor = 1 y alfa = 0.05, como el pvalor no es menor que la alfa no podemos rechazar la hipótesis nula, es decir, no podemos garantizar que el ranking de un juego cuya categoría es GAME WORD y el número de instalaciones sea elevado tenga un ranking superior que un juego de la misma categoría pero con un número de instalaciones bajo.
 
-#### Modelo de regresión lineal
+#### 4.3.3 Modelo de regresión lineal  
 
 Tal y como se definió en el primer apartado de la práctica, podría ser interesante el predecir qué ranking va a tener nuestro juego dentro de la categorñia GAME WORD, esto podría sernos de utilidad para saber si nuestro juego va a tener éxisto o no dependiendo  de las características que lo definen, como por ejemplo: el rating, el número de instalaciones...
 
@@ -580,24 +571,31 @@ Para evaluar qué modelo es el mejor nos fijaremos en la medida estadística R2,
 Para definir un modelo de regresión lineal tenemos que determinar cuál es la variable objetivo, en nuestro caso el campo "rank" y las variables independientes.
 
 Para el primer modelo vamos a usar como variable independientes solamente el crecimiento en 30 días y el número de instalaciones:
+
 ```{r}
 m1_rlm = lm(rank ~ growth..30.days. + int_installs, data = newgames.word)
 ```
 
 En el segundo modelo vamos a continuar con el número de instalaciones, pero añadimos los ratings de 5, 3 y 1 estrellas:
+
 ```{r}
-m2_rlm = lm(rank ~ X5.star.ratings + X3.star.ratings + X1.star.ratings + int_installs, data = newgames.word)
+m2_rlm = lm(rank ~ X5.star.ratings + X3.star.ratings + X1.star.ratings + int_installs, 
+            data = newgames.word)
 ```
 
 El último modelo es similar al anterior, pero añadiendo los ratings de 4 y 2 estrellas:
+
 ```{r}
-m3_rlm = lm(rank ~ X5.star.ratings + X4.star.ratings + X3.star.ratings + X2.star.ratings + X1.star.ratings + int_installs, data = newgames.word)
+m3_rlm = lm(rank ~ X5.star.ratings + X4.star.ratings + X3.star.ratings + X2.star.ratings +
+            X1.star.ratings + int_installs, data = newgames.word)
 ```
 
 Una vez que hemos creado todos los modelos obtenemos el coeficiente de determinación (R2) para cada uno de ellos:
+
 ```{r}
 vec_modelos = c("Modelo 1", "Modelo 2", "Modelo 3")
-vec_R2 = c(summary(m1_rlm)$r.squared, summary(m2_rlm)$r.squared, summary(m3_rlm)$r.squared)
+vec_R2 = c(summary(m1_rlm)$r.squared, summary(m2_rlm)$r.squared,
+           summary(m3_rlm)$r.squared)
 df_R2 = data.frame(
   vec_modelos, 
   vec_R2
@@ -610,6 +608,7 @@ head(df_R2)
 Observamos que el modelo que mejor se comporta con nuestros datos es el tercero, es decir, aquel en el que incluimos todas las variables significativas que están correlacionadas con la variable objetivo, en nuestro caso con rank.
 
 Finalmente, vamos a predecir qué posición dentro del ranking tendría un juego creado para la categoría GAME WORD:
+
 ```{r}
 head(newgames.word)
 ```
@@ -642,25 +641,38 @@ Pero antes de continuar, para facilitar la representación de la información, v
 newgames_discretizado = newgames.word
 
 # Discretización de rank
-newgames_discretizado["d-rank"] = ordered(cut(newgames_discretizado[["rank"]], breaks = c(0,26,74,100), labels = c("Alto", "Medio", "Bajo")))
+newgames_discretizado["d-rank"] = ordered(cut(newgames_discretizado[["rank"]],
+                      breaks = c(0,26,74,100), labels = c("Alto", "Medio", "Bajo")))
 
 # Discretización de X5.star.ratings
-newgames_discretizado["d-X5.star.ratings"] = ordered(cut(newgames_discretizado[["X5.star.ratings"]], breaks = c(0,121285,284850,1395623), labels = c("Bajo", "Medio", "Alto")))
+newgames_discretizado["d-X5.star.ratings"] = ordered(cut(newgames_discretizado[["X5.star.ratings"]],
+                                             breaks = c(0,121285,284850,1395623),
+                                             labels = c("Bajo", "Medio", "Alto")))
  
 # Discretización de X4.star.ratings
-newgames_discretizado["d-X4.star.ratings"] = ordered(cut(newgames_discretizado[["X4.star.ratings"]], breaks = c(0,21082,71891,222920), labels = c("Bajo", "Medio", "Alto")))
+newgames_discretizado["d-X4.star.ratings"] = ordered(cut(newgames_discretizado[["X4.star.ratings"]],
+                                             breaks = c(0,21082,71891,222920), 
+                                             labels = c("Bajo", "Medio", "Alto")))
  
 # Discretización de X3.star.ratings
-newgames_discretizado["d-X3.star.ratings"] = ordered(cut(newgames_discretizado[["X3.star.ratings"]], breaks = c(0,8884,29994,82726), labels = c("Bajo", "Medio", "Alto")))
+newgames_discretizado["d-X3.star.ratings"] = ordered(cut(newgames_discretizado[["X3.star.ratings"]],
+                                             breaks = c(0,8884,29994,82726), 
+                                             labels = c("Bajo", "Medio", "Alto")))
  
 # Discretización de X2.star.ratings
-newgames_discretizado["d-X2.star.ratings"] = ordered(cut(newgames_discretizado[["X2.star.ratings"]], breaks = c(0,3011,10747,32652), labels = c("Bajo", "Medio", "Alto")))
+newgames_discretizado["d-X2.star.ratings"] = ordered(cut(newgames_discretizado[["X2.star.ratings"]], 
+                                             breaks = c(0,3011,10747,32652), 
+                                             labels = c("Bajo", "Medio", "Alto")))
  
 # Discretización de X1.star.ratings
-newgames_discretizado["d-X1.star.ratings"] = ordered(cut(newgames_discretizado[["X1.star.ratings"]], breaks = c(0,7122,26938,105952), labels = c("Bajo", "Medio", "Alto")))
+newgames_discretizado["d-X1.star.ratings"] = ordered(cut(newgames_discretizado[["X1.star.ratings"]], 
+                                             breaks = c(0,7122,26938,105952), 
+                                             labels = c("Bajo", "Medio", "Alto")))
  
 # Discretización de int_installs
-newgames_discretizado["d-int_installs"] = ordered(cut(newgames_discretizado[["int_installs"]], breaks = c(0, 9999999, 100000000), labels = c("Bajo","Alto")))
+newgames_discretizado["d-int_installs"] = ordered(cut(newgames_discretizado[["int_installs"]], 
+                                          breaks = c(0, 9999999, 100000000), 
+                                          labels = c("Bajo","Alto")))
 ```
 
 Vemos el cómo se han creado dichas variables:
@@ -671,7 +683,8 @@ head(newgames_discretizado)
 
 Una vez que ya tenemos las variables discretizadas vamos a realizar la representación del análisis de estos datos. Lo primero que vamos a analizar es el ranking respecto al número de instalaciones, este fue el objeto de estudio del contraste de hipótesis:
 ```{r}
-ggplot(data = newgames_discretizado, aes(x=`d-int_installs`,fill=`d-rank`)) + geom_bar(position = "fill") +
+ggplot(data = newgames_discretizado, aes(x=`d-int_installs`,fill=`d-rank`)) + 
+  geom_bar(position = "fill") +
   xlab("Número de instalaciones") +
   ylab("Frecuencia") +
   scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
@@ -684,7 +697,8 @@ El siguiente aspecto a analizar es el número de estrellas que tiene cada juego 
 
 Por lo que primero vamos a analizar el número de calificaciones de 5 estrellas:
 ```{r}
-ggplot(data = newgames_discretizado, aes(x=`d-X5.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+ggplot(data = newgames_discretizado, aes(x=`d-X5.star.ratings`,fill=`d-rank`)) + 
+  geom_bar(position = "fill") +
   xlab("Número de calificaciones de 5 estrellas") +
   ylab("Frecuencia") +
   scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
@@ -695,7 +709,8 @@ Como podemos apreciar, aquellos juego que tienen un elevado número de calificac
 
 Realizamos el mismo análisis pero para las calificacioens de 4 estrellas:
 ```{r}
-ggplot(data = newgames_discretizado, aes(x=`d-X4.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+ggplot(data = newgames_discretizado, aes(x=`d-X4.star.ratings`,fill=`d-rank`)) + 
+  geom_bar(position = "fill") +
   xlab("Número de calificaciones de 4 estrellas") +
   ylab("Frecuencia") +
   scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
@@ -706,7 +721,8 @@ Al igual que sucedía antes, cuanto más elevado sea el número de calificacione
 
 Analizamos las calificaciones de 3 estrellas:
 ```{r}
-ggplot(data = newgames_discretizado, aes(x=`d-X3.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+ggplot(data = newgames_discretizado, aes(x=`d-X3.star.ratings`,fill=`d-rank`)) + 
+  geom_bar(position = "fill") +
   xlab("Número de calificaciones de 3 estrellas") +
   ylab("Frecuencia") +
   scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
@@ -717,7 +733,8 @@ Siguiendo con la tónica de los casos anterior, a mayor número de calificacione
 
 Seguimos analizando las calificaciones de 2 estrellas:
 ```{r}
-ggplot(data = newgames_discretizado, aes(x=`d-X2.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+ggplot(data = newgames_discretizado, aes(x=`d-X2.star.ratings`,fill=`d-rank`)) + 
+  geom_bar(position = "fill") +
   xlab("Número de calificaciones de 2 estrellas") +
   ylab("Frecuencia") +
   scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
@@ -730,7 +747,8 @@ Esto solo tiene una explicación, y es que lo juegos mejor posicionados en el ra
 
 Por último, analizamos el número de calificaciones de 1 estrellas:
 ```{r}
-ggplot(data = newgames_discretizado, aes(x=`d-X1.star.ratings`,fill=`d-rank`)) + geom_bar(position = "fill") +
+ggplot(data = newgames_discretizado, aes(x=`d-X1.star.ratings`,fill=`d-rank`)) + 
+  geom_bar(position = "fill") +
   xlab("Número de calificaciones de 1 estrellas") +
   ylab("Frecuencia") +
   scale_fill_manual(name = "Rank", values=c("#00bfc4","#f8766d", "#fff300")) +
@@ -744,4 +762,38 @@ Al igual que sucedía en el caso anterior, los juegos mejor posicionados en el r
 ****
 ### A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
 
+El objetivo de esta práctica más que resolver un problema a sido dar respuesta ha una serie de preguntas, la principal de ellas, ¿Cómo que variables afecta a que ranking de un video juego sea mayor o menor? ¿El ranking de los juegos de una categoría determinada es superior en caso de tener unas instalaciones elevadas?  
 
+A lo largo de práctica hemos dado respuestas a estas preguntas, a demás de desarrollar un modelo de regresión lineal que nos permite predecir cual será el puesto en el ranking de un video juego determinado.
+
+Del análisis realizado podemos concluir, que las variables que más influyen sobre el puesto que ocupa un video juego en el ranking son el número de estrellas obtenidas, a mayor número de estrellas más alto es el puesto del video juego en el ranking, esto lo hemos comprobado estudiando la correlación de las variables cuantitativas con el ranking. En el análisis gráfico hemos podido ver que hay categorías de juegos que a mayor número de instalaciones mayor es su puesto en el ranking pero está afirmación no se puede extender a todas las categorías.
+
+Por último, hemos desarrollado un modelo de regresión lineal con las variables ranking, calificación en estrellas (X1, X2, X3, X4, X5) y número de instalaciones, que tras analizar distinto modelo este es el que ha obtenido un coeficiente de determinación (R cuadrado) mayor.  Este modelo nos ha permitido hacer la predicción de la posición de una categoría determinada en el ranking. Esto se puede trasladar a cualquier categoría de nuestro dataset. Esto es de gran utilidad en caso de querer invertir en un video juego o querer publicitarnos en el mismo, podríamos elegir un video juego que tendrá éxito.
+
+***
+# 7. Código: 
+***
+Como se opuede observar el código se ha realizado en R.  
+
+Para el desarrollo de la práctica se ha seguido la siguiente metodología desarrollada en cuatro etapas:
+
+**Fase 1**: Se realiza la comprensión y contextualización de los datos a los cuáles se les va a realizar el análisis. Con ellos identificamos
+si existen problemas de calidad y se identifican los datos que necesitan ser limpiados.
+
+**Fase 2**: Se definen los métodos a realizar solventar los problemas identificados y se realiza el proceso de limpieza de datos.
+
+**Fase 3**: Se realiza el análisis por medio de métodos estadísticos descriptivos e inferenciales.
+
+**Fase 4**: Se analizan los resultados obtenidos del proceso anterior, formulando las conclusiones que se desprenden de los resultados.
+
+***
+# 8.Tabla de contribuciones al trabajo:
+***
+
+```{r eval = TRUE, echo = TRUE}
+knitr::include_graphics("../code/Tabla.png")
+```
+
+MUSM: Mario Ubierna San Mamés.
+
+MGC: Moreyba García Cedrés.
