@@ -3,13 +3,13 @@ title: 'PRACTICA 2: LIMPIEZA Y VALIDACIÓN DE LOS DATOS'
 authors: "Mario Ubierna San Mamés y Moreyba García Cedrés"
 date: '`r format(Sys.Date(),"%e de %B %Y")`'
 output: 
+  pdf_document: 
+    latex_engine: xelatex
   html_document:
     number_sections: no
     toc: yes
     toc_depth: 2
     toc_float: yes
-  pdf_document: 
-    latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
@@ -34,17 +34,23 @@ library(ggplot2)
 # 1. Descripción del dataset. 
 ****
 
-El dataset que hemos selecionado contiene datos de los 100 juegos de Google Play Store mejor valorados. Las variables que recoge el dataset son:
+El dataset sobre el cual vamos a realizar el analisis se ha extaído a partir de este enlace en Kaggle:
+
+https://www.kaggle.com/dhruvildave/top-play-store-games?select=android-games.csv
+
+Está constituido por 15 variable (columnas) y 1730  (filas o registros). 
+
+El dataset que hemos seleccionado contiene datos de los 100 juegos de Google Play Store mejor valorados. Las variables que recoge el dataset son:
 
 - Rank: Calsificación de una categoría particular.
 - Title: Nombre del juego.
 - Total ranting: Número total de calificaciones.
-- Installs: Número de intalaciones aproximado.
+- Installs: Número de instalaciones aproximado.
 - Average rating: Promedio de estrellas.
 - growth (30 days): Porcentaje de crecimiento en 30 días.
 - growth (60 days): Porcentaje de crecimiento en 60 días.
-- price: Precio en Dolares.
-- category: Cantegoria del juego. 
+- price: Precio en Dólares.
+- category: Categoría del juego. 
 - X5.star.ratings: Número de calificaciones de 5 estrellas.
 - X4.star.ratings: Número de calificaciones de 4 estrellas.
 - X3.star.ratings: Número de calificaciones de 3 estrellas.
@@ -52,7 +58,7 @@ El dataset que hemos selecionado contiene datos de los 100 juegos de Google Play
 - X1.star.ratings: Número de calificaciones de 1 estrellas.
 - paid: Toma valor verdadero si se pago y falso si no se hizo.
 
-### ¿Por qué es importante y qué pregunta/problema pretende responder?
+### 1.1 ¿Por qué es importante y qué pregunta/problema pretende responder?
 
 Una vez que conocemos las variables que componen el dataset, pasamos a definir cuál es la pregunta que tratamos de resolver y por qué es importante este dastaset.
 
@@ -60,11 +66,11 @@ Como bien sabemos el mundo de los videojuegos ha cambiado completamente en la ú
 
 Desde que apareció el primer videojuego en 1958 con el conocido "Tennis for two" de William Higinbotham y Robert Dvorak, la tendencia era la misma en cuanto al desarrollo de los juegos, el cómo venderlos, cómo hacer que llegaran a más gente, cómo de buenos eran... 
 
-El tiempo avanzaba y parecía que esta industria seguía igual, sin embargo hubo un hecho importante, la aparición de los smartphones. Esta nueva herramienta ha cambiado en todos los aspectos como se rige el mundo, lo que supone también un cambio en la industria de los videojuegos, es decir, ahora la gran mayaría del público gamer juega más en dipositivos móviles que en las consolas tradicionales.
+El tiempo avanzaba y parecía que esta industria seguía igual, sin embargo hubo un hecho importante, la aparición de los smartphones. Esta nueva herramienta ha cambiado en todos los aspectos como se rige el mundo, lo que supone también un cambio en la industria de los videojuegos, es decir, ahora la gran mayaría del público gamer juega más en dispositivos móviles que en las consolas tradicionales.
 
 Al tener mayor audiencia aumenta la oferta, por lo que analizar este dataset nos puede aportar mucha información, por ejemplo el saber qué tipo de juego va a tener más éxito, si se decide poner un precio al juego y de ser así cuál, qué categoría de juego tiene un mayor público...
 
-Como podemos observar este dataset nos puede proporcionar mucha información en varios aspectos, pero en nuestro caso vamos a analizar exclusivamente el rank, es decir, vamor a descubrir de qué depende que un juego tenga un ranking mayor o en otras palabras, cuánto éxito puede tener. Para ello además de analizar qué variables están correlacionadas, vamos a realizar un contraste de hipótesis para saber si el número de instalaciones afecta al ranking, y crearemos diferentes modelos para predecir el ranking que puede llegar a tener un juego dependiendo de sus características... 
+Como podemos observar este dataset nos puede proporcionar mucha información en varios aspectos, pero en nuestro caso vamos a analizar exclusivamente el rank, es decir, vamos a descubrir de qué depende que un juego tenga un ranking mayor o en otras palabras, cuánto éxito puede tener. Para ello además de analizar qué variables están correlacionadas, vamos a realizar un contraste de hipótesis para saber si el número de instalaciones afecta al ranking, y crearemos diferentes modelos para predecir el ranking que puede llegar a tener un juego dependiendo de sus características... 
 
 La respuesta a la pregunta que nos hemos planteado se resolverá a lo largo de la práctica, pero lo primero de todo es hacer la limpieza del dataset.
 
@@ -73,7 +79,7 @@ La respuesta a la pregunta que nos hemos planteado se resolverá a lo largo de l
 ****
 ## 2.1. Integración de los datos.
 
-En primer lugar, realizamos la carga del fichero que contiene los datos para nuestro análisis en formato csv, el cual está delimitado por comas y los decismales "·". Obtenemos como resultado de la llamada a la función read.csv() será un objeto data.frame.
+En primer lugar, realizamos la carga del fichero que contiene los datos para nuestro análisis en formato csv, el cual está delimitado por comas y los decimales "·". Obtenemos como resultado de la llamada a la función read.csv() será un objeto data.frame.
  
 ```{r, echo=TRUE}
 # read data
@@ -85,7 +91,7 @@ n.var <- names(games)
 #View(games)
 ```
 
-Mostramos las primeras lineas del dataset, así como su encabezado.
+Mostramos las primeras líneas del dataset, así como su encabezado.
 
 ```{r, echo=TRUE}
 head(games)
@@ -95,7 +101,7 @@ Una vez cargados los datos comprobamos que nuestro fichero contiene `r nrow(game
 
 Las variables son de tipo `r toString(n.var)`.
 
-Como podemos en el resumen de los estadisticos descriptivos de las distintas variables no hay ningún campo no informado.
+Como podemos en el resumen de los estadísticos descriptivos de las distintas variables no hay ningún campo no informado.
 
 ```{r, echo=TRUE}
 summary(games)
@@ -122,19 +128,19 @@ unique(games$installs)
 unique(games$paid)
 ```
 
-Observamos que la variable title toma un valor distinto para cada registro. Más adelante trataresmos el resto de variables que sean necesarias para nuestro análisis.
+Observamos que la variable title toma un valor distinto para cada registro. Más adelante trataremos el resto de variables que sean necesarias para nuestro análisis.
 
 ## 2.3. Selección de variables.
 
-Para nuestro análisis vamos a eliminar del dataset los campos calculados, en nuetro caso son la media de estrellas que es la variable **average.rating, paid y total.ratings**. Por otro lado, para nuestro análisis es suficiente con uno de los porcentajes de crecimiento por tanto eliminamos tambien la variable **growth..60.days**. El resto de variables consideramos que son necesarias para el objetivo de nuesto análisis, ver como influyen en el ranking de un video juego.
+Para nuestro análisis vamos a eliminar del dataset los campos calculados, en nuestro caso son la media de estrellas que es la variable **average.rating, paid** y **total.ratings**. Por otro lado, para nuestro análisis es suficiente con uno de los porcentajes de crecimiento por tanto eliminamos también la variable **growth..60.days**. El resto de variables consideramos que son necesarias para el objetivo de nuestro análisis, ver como influyen en el ranking de un video juego.
 
 ```{r, echo=TRUE}
-games <-games[,c(-3,-5,-7,-15)] # Elimienamos las variables en cuestión.
+games <-games[,c(-3,-5,-7,-15)] # Eliminamos las variables en cuestión.
 
 head(games)
 ```
 
-Como resusltado obtenemos un dataset que contiene `r nrow(games)` registros y `r ncol(games)` variables.
+Como resultado obtenemos un dataset que contiene `r nrow(games)` registros y `r ncol(games)` variables.
 Las variables son de tipo `r toString(n.var)`.
 
 ****
@@ -154,7 +160,7 @@ games$category_num2 <- as.integer(games$category_factor)
 head(games)
 ```
 
-En el caso de la variable **Install** hemos supuesto que M millones y que k son miles, por lo que hemos multiplicado la M por 10^6 para pasalo a bytes y k por 10^3.
+En el caso de la variable **Install** hemos supuesto que M millones y que k son miles, por lo que hemos multiplicado la M por 10^6 y k por 10^3.
 
 ```{r, echo=TRUE}
 converter<-function(valueToConvert) {
@@ -173,13 +179,13 @@ head(games)
 ```
 
 
-Selecionamos las variables con las que vamos a hacer nuestro análisis.
+Seleccionamos las variables con las que vamos a hacer nuestro análisis.
 
 ```{r, echo=TRUE}
-games <-games[,c(-3,-6,-12,-13)] # Elimienamos las variables en variables que sobran
+games <-games[,c(-3,-6,-12,-13)] # Eliminamos las variables en variables que sobran
 ```
 
-Finalmente, tras tratar las variables mal informadas nos queda nuestro dataset final sobre el que vamos a plicar la limpieza de datos y posteriormente el análisis.
+Finalmente, tras tratar las variables mal informadas nos queda nuestro dataset final sobre el que vamos aplicar la limpieza de datos y posteriormente el análisis.
 
 ```{r, echo=TRUE}
 #read data
@@ -187,7 +193,7 @@ res <- sapply(games,  class)
 kable(data.frame(variables=names(res),clase=as.vector(res)))
 ```
 
-Como podemos ver solo nos hemos quedado con una varible categoricas **Title**y el resto las hemos reconvertido en númericas.
+Como podemos ver solo nos hemos quedado con una variable categóricas **Title**y el resto las hemos reconvertido en numéricas.
 
 ##    3.1. ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno de estos casos?
 
@@ -197,7 +203,7 @@ Como se puede comprobar en el resumen de los estadisticos descriptivos de las di
 summary(games)
 ```
 
-Con la función summary vemos si existen valores nulos y cual es el valor maximo y minimo que toma cada variable. La variable price toma valor cero pero es de interes para el análisis ya que significa que el usuario no ha pagando nada. Por otro lado, la variable growth..30.days. también toma valor 0 en el caso de no haber crecimiento.
+Con la función summary vemos si existen valores nulos y cual es el valor máximo y mínimo que toma cada variable. La variable price toma valor cero pero es de interés para el análisis ya que significa que el usuario no ha pagando nada. Por otro lado, la variable growth..30.days. también toma valor 0 en el caso de no haber crecimiento.
 
 ##    3.2. Identificación y tratamiento de valores extremos.
 
@@ -248,7 +254,9 @@ out_X1 <- boxplot.stats(games$X1.star.ratings)$out
 head(out_X1)
 ```
 
-Vemos una representación gráfica con boxplot de las variables númericas para comprobar si existen valores extremos.
+
+Vemos una representación gráfica con boxplot de las variables numéricas para comprobar si existen valores extremos.
+
 
 ```{r boxplot,eval=TRUE,echo=TRUE}
 par(mfrow=c(3,2))
@@ -264,7 +272,7 @@ Se considera valores extremos a aquellos valores cuando se encuentra alejado 3 d
 
 Gráficamente vemos que las variables con valores muy por encima de la medía son paid, que no se puede considerar outliers ya que la mayoría de lo juegos son gratuitos, también int_install está muy por encima de la media pero no parece ser incorrecto porque es posible que hayas juegos con más megas que otros.
 
-Las variables que si es posible que sean erroneos porque con fines mal intensionados se puede haber añadido excesivas valaraciones a un juego por medios automaticos (Robot) de forma que se pueden haber valores extemos estas son:
+Las variables que si es posible que sean erróneos porque con fines mal intencionados se puede haber añadido excesivas valoraciones a un juego por medios automáticos (Robot) de forma que se pueden haber valores extremos estas son:
  - growth..30.days.
  - X5.star.ratings    
  - X4.star.ratings   
@@ -272,7 +280,7 @@ Las variables que si es posible que sean erroneos porque con fines mal intension
  - X2.star.ratings   
  - X1.star.ratings 
  
- Es por ello, que hemos decidido elinminar estos valores.
+ Es por ello, que hemos decidido eliminar estos valores.
  
 ```{r, echo=TRUE}
 filas_old <-nrow(games)
@@ -386,7 +394,7 @@ Dado que el objetivo de esta práctica es demostrar el conocimiento adquirido y 
 
 Una vez hecha esta aclaración realizamos la **comprobación de la normalidad**, para ello hacemos uso de una librería externa y poder aplicar sobre las variables cuantitativas el test de Anderson-Darling.
 
-Paratimos de la base que la hipótesis nula es que la variable sigue una distribución normal, y la hipótesis alternativa que no sigue dicha distribución, por lo tanto vamos a comprobar para cada variable si el pvalor obtenido es menor que el nivel de significacia, es decir, si pvalor < alfa, de ser así podemos rechazar la hipótesis nula a favor de la aternativa.
+Partimos de la base que la hipótesis nula es que la variable sigue una distribución normal, y la hipótesis alternativa que no sigue dicha distribución, por lo tanto vamos a comprobar para cada variable si el pvalor obtenido es menor que el nivel de significancia, es decir, si pvalor < alfa, de ser así podemos rechazar la hipótesis nula a favor de la alternativa.
 
 Definimos la función que nos realiza este cálculo:
 
@@ -454,7 +462,7 @@ De la anterior ejecución vemos que para la categoría "GAME WORD", todas las va
 
 Para concluir con este apartado realizamos el estudio de la homogeneidad de la varianza. En este caso la hipótesis nula es que las varianzas son iguales y la alternativa en caso contrario. Si el pvalor es menor que alfa rechazamos la hipótesis nula a favor de la alternativa.
 
-**El análisis de la homogeneidad** lo vamos a realizar con el fin de saber qué estadístico tenemos que aplicar para el contraste de hipótesis, por lo que vamos a tener cuenta las muestras de el ranking de un juego cuya categoría sea "GAME WORD" y con descargas altas, por otro lado el ranking de un juego cuya categoría sea "GAME WORD" y con descargas bajas, para ello útilizaremos en contraste de hipotesisis F de Fisher:
+**El análisis de la homogeneidad** lo vamos a realizar con el fin de saber qué estadístico tenemos que aplicar para el contraste de hipótesis, por lo que vamos a tener cuenta las muestras de el ranking de un juego cuya categoría sea "GAME WORD" y con descargas altas, por otro lado el ranking de un juego cuya categoría sea "GAME WORD" y con descargas bajas, para ello utilizaremos en contraste de hipótesis F de Fisher:
 
 ```{r}
 var.test(newgames.ins_low$rank, newgames.ins_high$rank, conf.level = 0.95)
@@ -466,9 +474,10 @@ Tal y como podemos apreciar en la anterior ejecución obtenemos un pvalor = 0.85
 
 ### En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis diferentes.
 
-#### 4.3.1 ¿Qué variables cuantitativas influyen más en el ranking?
 
-En este apartado lo que vamos realizar es calcular la correlacion que hay entre cada una de las variables cuantitativas respecto al ranking, pero si la variable cuantitativa solo toma un valor la eliminamos para calcular la correlación:
+#### 4.3.1 ¿Qué variables cuantitativas influyen más en el ranking?  
+
+En este apartado lo que vamos realizar es calcular la correlación que hay entre cada una de las variables cuantitativas respecto al ranking, pero si la variable cuantitativa solo toma un valor la eliminamos para calcular la correlación:
 
 ```{r}
 correlacion = function(df) {
@@ -533,9 +542,10 @@ chart.Correlation(data.frame(newgames.word$rank, newgames.word$X1.star.ratings))
 chart.Correlation(data.frame(newgames.word$rank, newgames.word$int_installs))
 ```
 
-#### 4.3.2 ¿El ranking de los juegos de la categoría GAME WORD es superior en caso de tener unas instalaciones elevadas?  
+#### 4.3.2 ¿El ranking de los juegos de la categoría GAME WORD es superior en caso de tener unas instalaciones elevadas?.    
 
-Continuando con las pruebas estadísticas, ahora vamos a hacer un contraste de hipótesis de dos muestras sobre la media, utilizaremos la **Prueba de T-Studente** (t-test) Una muestra va a contener todos los juegos de la categoría GAME WORD cuyas descargas sean inferiores a 10 millones, y la seguna muestra va a contener los juego de la categoría GAME WORD cuyas descargas sean iguales o superiores a 10 millones:
+Continuando con las pruebas estadísticas, ahora vamos a hacer un contraste de hipótesis de dos muestras sobre la media, utilizaremos la **Prueba de T-Studente** (t-test) Una muestra va a contener todos los juegos de la categoría GAME WORD cuyas descargas sean inferiores a 10 millones, y la segunda muestra va a contener los juego de la categoría GAME WORD cuyas descargas sean iguales o superiores a 10 millones:
+
 ```{r}
 ranking.ins_low = newgames.ins_low$rank
 ranking.ins_high = newgames.ins_high$rank
@@ -560,9 +570,9 @@ t.test(ranking.ins_high, ranking.ins_low, alternative = "greater", var.equal = T
 
 De la anterior ejecución vemos que el pvalor = 1 y alfa = 0.05, como el pvalor no es menor que la alfa no podemos rechazar la hipótesis nula, es decir, no podemos garantizar que el ranking de un juego cuya categoría es GAME WORD y el número de instalaciones sea elevado tenga un ranking superior que un juego de la misma categoría pero con un número de instalaciones bajo.
 
-#### 4.3.3 Modelo de regresión lineal  
+#### 4.3.3 Modelo de regresión lineal.  
 
-Tal y como se definió en el primer apartado de la práctica, podría ser interesante el predecir qué ranking va a tener nuestro juego dentro de la categorñia GAME WORD, esto podría sernos de utilidad para saber si nuestro juego va a tener éxisto o no dependiendo  de las características que lo definen, como por ejemplo: el rating, el número de instalaciones...
+Tal y como se definió en el primer apartado de la práctica, podría ser interesante el predecir qué ranking va a tener nuestro juego dentro de la categoría GAME WORD, esto podría sernos de utilidad para saber si nuestro juego va a tener éxisto o no dependiendo  de las características que lo definen, como por ejemplo: el rating, el número de instalaciones...
 
 Como a priori no sabemos qué modelo se va a comportar mejor para nuestros datos, vamos a crear diferentes modelos de regresión lineal, posteriormente comprobaremos qué modelo se comporta mejor y usaremos éste para hacer una predicción.
 
@@ -634,9 +644,10 @@ cat("El rank que tendría nuestro juego sería el: ", round(predict(m3_rlm, df_g
 # 5. Representación de los resultados a partir de tablas y gráficas.
 ****
 
-Una vez que hemos realizado la limpieza y el análisis de datos, el cual no ha permitdo obtener información a partir de los mismos, vamos a continuar con el análisis pero de una forma visual, es decir, a partir de gráficos, de los cuales extraermos las conclusiones y las enlazaremos con el apartado anterior.
+Una vez que hemos realizado la limpieza y el análisis de datos, el cual no ha permitido obtener información a partir de los mismos, vamos a continuar con el análisis pero de una forma visual, es decir, a partir de gráficos, de los cuales extraeremos las conclusiones y las enlazaremos con el apartado anterior.
 
 Pero antes de continuar, para facilitar la representación de la información, vamos a discretizar las variables significativas según el análisis hecho anteriormente, es decir, la variable rank, los ratings e int_installs:
+
 ```{r}
 newgames_discretizado = newgames.word
 
@@ -691,7 +702,7 @@ ggplot(data = newgames_discretizado, aes(x=`d-int_installs`,fill=`d-rank`)) +
   ggtitle("Ranking respecto al número de instalaciones")
 ```
 
-Del anterior gráfico vemos que a mayor número de instalaciones como es lógico un mayor ranking tenemos, pero tal y como vimos en el contraste de hipósteis esto no significa que siempre sea así, por lo que no podemos garantizar que si un juego tiene muchas descargas vaya a tener un ranking alto.
+Del anterior gráfico vemos que a mayor número de instalaciones como es lógico un mayor ranking tenemos, pero tal y como vimos en el contraste de hipótesis esto no significa que siempre sea así, por lo que no podemos garantizar que si un juego tiene muchas descargas vaya a tener un ranking alto.
 
 El siguiente aspecto a analizar es el número de estrellas que tiene cada juego y si esto significa un mayor ranking.
 
@@ -707,7 +718,8 @@ ggplot(data = newgames_discretizado, aes(x=`d-X5.star.ratings`,fill=`d-rank`)) +
 
 Como podemos apreciar, aquellos juego que tienen un elevado número de calificaciones significa que el juego tiene un ranking mayor, por contra si el número de calificaciones es bajo es más probable tener un juego con un ranking bajo o medio.
 
-Realizamos el mismo análisis pero para las calificacioens de 4 estrellas:
+Realizamos el mismo análisis pero para las calificaciones de 4 estrellas:
+
 ```{r}
 ggplot(data = newgames_discretizado, aes(x=`d-X4.star.ratings`,fill=`d-rank`)) + 
   geom_bar(position = "fill") +
@@ -743,7 +755,7 @@ ggplot(data = newgames_discretizado, aes(x=`d-X2.star.ratings`,fill=`d-rank`)) +
 
 Aunque lo lógico sería que a medida que vamos reduciendo las estrellas de un juego su ranking sea peor, vemos que esto no es del todo cierto, ya que en este caso los juegos que siguen teniendo un elevado número de calificaciones de 2 estrellas siguen con un ranking elevado.
 
-Esto solo tiene una explicación, y es que lo juegos mejor posicionados en el ranking tienen un mayor número de calificaciones en todos los niveles, es decir, tanto en 5 como 4, 3, 2 o una estrella. Por lo tanto, al hacer el análisis del ranking para cada nivel de califación vemos que los juegos con una alta posición siempre tienen el mayor número de calificaciones (aunque en este caso una califiación de 2 estrellas sea algo negativo), por otro lado, esto no significa que los juegos con una posición baja en el ranking tengan bajo cada uno de los niveles de califiación, seguramente el número de calificaciones para cada nivel sea menor que los juego mejor posicionados, pero en comparativa éstos tienen peores calificaciones.  
+Esto solo tiene una explicación, y es que lo juegos mejor posicionados en el ranking tienen un mayor número de calificaciones en todos los niveles, es decir, tanto en 5 como 4, 3, 2 o una estrella. Por lo tanto, al hacer el análisis del ranking para cada nivel de calificación vemos que los juegos con una alta posición siempre tienen el mayor número de calificaciones (aunque en este caso una calificación de 2 estrellas sea algo negativo), por otro lado, esto no significa que los juegos con una posición baja en el ranking tengan bajo cada uno de los niveles de calificación, seguramente el número de calificaciones para cada nivel sea menor que los juego mejor posicionados, pero en comparativa éstos tienen peores calificaciones.   
 
 Por último, analizamos el número de calificaciones de 1 estrellas:
 ```{r}
@@ -762,18 +774,34 @@ Al igual que sucedía en el caso anterior, los juegos mejor posicionados en el r
 ****
 ### A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
 
-El objetivo de esta práctica más que resolver un problema a sido dar respuesta ha una serie de preguntas, la principal de ellas, ¿Cómo que variables afecta a que ranking de un video juego sea mayor o menor? ¿El ranking de los juegos de una categoría determinada es superior en caso de tener unas instalaciones elevadas?  
+### 6.1 A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
 
-A lo largo de práctica hemos dado respuestas a estas preguntas, a demás de desarrollar un modelo de regresión lineal que nos permite predecir cual será el puesto en el ranking de un video juego determinado.
+El objetivo de esta práctica más que resolver un problema a sido dar respuesta ha una serie de preguntas, la principal de ellas, ¿De qué depende que un juego tenga un ranking mayor o menor, es decir, de que factores depende el éxito que pueda tener? ¿El ranking de los juegos de una categoría determinada es superior en caso de tener unas instalaciones elevadas?  
 
-Del análisis realizado podemos concluir, que las variables que más influyen sobre el puesto que ocupa un video juego en el ranking son el número de estrellas obtenidas, a mayor número de estrellas más alto es el puesto del video juego en el ranking, esto lo hemos comprobado estudiando la correlación de las variables cuantitativas con el ranking. En el análisis gráfico hemos podido ver que hay categorías de juegos que a mayor número de instalaciones mayor es su puesto en el ranking pero está afirmación no se puede extender a todas las categorías.
+A lo largo de práctica hemos dado respuestas a estas preguntas, a demás de desarrollar un modelo de regresión lineal que nos permite predecir cual será el puesto en el ranking de un video juego determinado, es decir, el éxito del juego.
 
-Por último, hemos desarrollado un modelo de regresión lineal con las variables ranking, calificación en estrellas (X1, X2, X3, X4, X5) y número de instalaciones, que tras analizar distinto modelo este es el que ha obtenido un coeficiente de determinación (R cuadrado) mayor.  Este modelo nos ha permitido hacer la predicción de la posición de una categoría determinada en el ranking. Esto se puede trasladar a cualquier categoría de nuestro dataset. Esto es de gran utilidad en caso de querer invertir en un video juego o querer publicitarnos en el mismo, podríamos elegir un video juego que tendrá éxito.
+Del análisis realizado podemos concluir, que las variables que más influyen sobre el puesto que ocupa un video juego en el ranking son el número de estrellas obtenidas, a mayor número de estrellas más alto es el puesto del video juego en el ranking, esto lo hemos comprobado estudiando la correlación de las variables cuantitativas con el ranking. 
+Por otro lado, En el análisis gráfico hemos podido ver que hay categorías de juegos que a mayor número de instalaciones mayor es su puesto en el ranking pero está afirmación no se puede extender a todas las categorías.
+
+Por último, hemos desarrollado un modelo de regresión lineal con las variables ranking, calificación en estrellas (X1, X2, X3, X4, X5) y número de instalaciones, que tras analizar distinto modelo, este es el que ha obtenido un coeficiente de determinación (R cuadrado) mayor, por lo que se considera más idóneo. Este modelo nos ha permitido hacer la predicción de la posición de una categoría determinada en el ranking. Esto se puede trasladar a cualquier categoría de nuestro dataset. Esto es de gran utilidad en caso de querer invertir en un video juego o querer publicitarnos en el mismo, ya que la mayor parte de los video juegos son gratuitos y su ingresos provienen de la publicidad, en base a nuestro análisis podríamos elegir un video juego que tendrá éxito, lo que nos garantiza una mejor inversión e impacto de la publicidad.
+
 
 ***
 # 7. Código: 
 ***
-Como se opuede observar el código se ha realizado en R.  
+Para el desarrollo de la práctica el lenguaje de programación elegido ha sido R. 
+
+El dataset se ha extraido del siguiente enlace:
+
+https://www.kaggle.com/dhruvildave/top-play-store-games?select=android-games.csv
+
+Por último se ha organizado en el proyecto de la siguiente manera:
+
+- **code/Práctica 2 Limpieza de datos.Rmd** : Archivo con el código en R que se ha utilizado para cada uno de los apartados de la práctica.
+- **code/Práctica 2 Limpieza de datos.pdf** : Archivo en pdf donde se muestra el contenido de la práctica.
+- **code/Práctica 2 Limpieza de datos.html** : Archivo en html donde se muestra el contenido de la práctica.
+- **data/android-games.csv** : Archivo original con los datos sobres los que hemos hecho el análisis.
+- **data/newgames.csv** : Archivo con los datos tras hacer la limpieza de datos.
 
 Para el desarrollo de la práctica se ha seguido la siguiente metodología desarrollada en cuatro etapas:
 
@@ -786,6 +814,7 @@ si existen problemas de calidad y se identifican los datos que necesitan ser lim
 
 **Fase 4**: Se analizan los resultados obtenidos del proceso anterior, formulando las conclusiones que se desprenden de los resultados.
 
+
 ***
 # 8.Tabla de contribuciones al trabajo:
 ***
@@ -797,3 +826,15 @@ knitr::include_graphics("../code/Tabla.png")
 MUSM: Mario Ubierna San Mamés.
 
 MGC: Moreyba García Cedrés.
+
+***
+# 9.Referencias:
+***
+
+1. Calvo M, Subirats L, Pérez D (2019). Introducción a la limpieza y análisis de los datos. Editorial UOC.
+2. Jason W. Osborne (2010). Data Cleaning Basics: Best Practices in Dealing with Extreme Scores. Newborn and Infant Nursing Reviews; 10 (1): pp. 1527-3369.
+3. Peter Dalgaard (2008). Introductory statistics with R. Springer Science & Business Media.
+4. Gibergans Baguena, Josep. 2009. «Contraste de dos muestras». En Estadística, editado por Josep Gibergans Baguena, Angel J. Gil Estallo, y Carles Rovira Escofet. Barcelona: FUOC.
+5. Gil Estallo, Angel J. 2009. «Intervalos de confianza». En Estadística, editado por Angel J. Gil Estallo J. Gibergans Baguena y Carles Rovira Escofet. Barcelona: FUOC.
+6. Rovira, Carles. 2009. «Contraste de hipoótesis». En Estadística, editado por J. Gibergans Baguena, Angel J. Gil Estallo, y Carles Rovira Escofet. Barcelona: FUOC.
+
